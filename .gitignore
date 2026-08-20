@@ -1,0 +1,30 @@
+# Binaries
+bin/
+explain
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build directories & GoReleaser
+dist/
+dist-*
+
+# Test artifacts
+*.test
+*.out
+coverage.html
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Go specific
+vendor/
+go.work
+go.work.sum
