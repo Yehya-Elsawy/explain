@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/elsawy/explain/pkg/ast"
+	"github.com/Yehya-Elsawy/explain-/pkg/ast"
 )
 
 func TestParseSimpleCommand(t *testing.T) {

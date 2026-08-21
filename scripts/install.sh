@@ -38,7 +38,7 @@ if [ -f "$REPO_DIR/go.mod" ] && command -v go >/dev/null 2>&1; then
     echo -e "${GREEN}✅ Successfully installed explain to $INSTALL_DIR/explain${NC}"
 else
     # Fallback to GitHub Release download
-    REPO="elsawy/explain"
+    REPO="Yehya-Elsawy/explain-"
     ARCH="$(uname -m)"
     OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
@@ -53,7 +53,7 @@ else
     echo -e "${YELLOW}⬇️  Downloading explain binary for ${OS}/${ARCH}...${NC}"
     TMP_DIR="$(mktemp -d)"
     curl -fsSL "$LATEST_URL" -o "$TMP_DIR/explain.tar.gz" || {
-        echo -e "${RED}Failed to download binary from GitHub. Please install via 'go install github.com/elsawy/explain/cmd/explain@latest'${NC}"
+        echo -e "${RED}Failed to download binary from GitHub. Please install via 'go install github.com/Yehya-Elsawy/explain-/cmd/explain@latest'${NC}"
         exit 1
     }
     tar -xzf "$TMP_DIR/explain.tar.gz" -C "$TMP_DIR"

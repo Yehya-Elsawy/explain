@@ -5,10 +5,10 @@
 **Demystify Linux terminal commands in seconds.**  
 *A lightweight, zero-dependency, 100% offline CLI tool written in Go that breaks down complex terminal commands, explains their flags, and highlights safety risks before you run them.*
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/elsawy/explain)](https://goreportcard.com/report/github.com/elsawy/explain)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Yehya-Elsawy/explain-)](https://goreportcard.com/report/github.com/Yehya-Elsawy/explain-)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey.svg)]()
-[![Release](https://img.shields.io/github/v/release/elsawy/explain?color=green)](https://github.com/elsawy/explain/releases)
+[![Release](https://img.shields.io/github/v/release/Yehya-Elsawy/explain-?color=green)](https://github.com/Yehya-Elsawy/explain-/releases)
 
 <br/>
 
@@ -59,17 +59,17 @@ explain tar -xzf backup.tar.gz
 
 ### Option 1: One-Line Installer (Recommended)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/elsawy/explain/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Yehya-Elsawy/explain-/main/scripts/install.sh | bash
 ```
 
 ### Option 2: Go Install
 ```bash
-go install github.com/elsawy/explain/cmd/explain@latest
+go install github.com/Yehya-Elsawy/explain-/cmd/explain@latest
 ```
 
 ### Option 3: Build from Source
 ```bash
-git clone https://github.com/elsawy/explain.git
+git clone https://github.com/Yehya-Elsawy/explain-.git
 cd explain
 make
 make install
