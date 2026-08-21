@@ -15,7 +15,7 @@ import (
 	"github.com/Yehya-Elsawy/explain/pkg/updater"
 )
 
-var Version = "v1.0.2"
+var Version = "v1.0.0"
 
 func printHelp() {
 	ui.InitColors(false)
@@ -25,8 +25,8 @@ func printHelp() {
 %s
   explain <command with arguments>
   explain "<piped | or compound command>"
+  explain update (update explain to the latest version)
   explain -i (interactive mode - no quotes needed)
-  explain update (update explain to the latest release)
 
 %s
   explain tar -xzf backup.tar.gz
@@ -36,9 +36,9 @@ func printHelp() {
   explain "rm -rf /tmp/cache"
 
 %s
+  explain update    Check and upgrade explain to the latest release from GitHub
   -i, --interactive Launch interactive mode (paste complex pipelines without quotes)
   -r, --run         Ask to run the command after explaining it
-  -u, --update      Update explain CLI to the latest version from GitHub
   --json            Output structured analysis in JSON format
   --no-color        Disable colored output
   -v, --version     Show current explain version
@@ -51,7 +51,7 @@ func printHelp() {
 		ui.Colorize(ui.BoldCyan, "explain "+Version),
 		ui.Colorize(ui.BoldWhite, "USAGE:"),
 		ui.Colorize(ui.BoldWhite, "EXAMPLES:"),
-		ui.Colorize(ui.BoldWhite, "OPTIONS:"),
+		ui.Colorize(ui.BoldWhite, "COMMANDS & OPTIONS:"),
 		ui.Colorize(ui.Dim, "PRO TIP:"),
 	)
 }

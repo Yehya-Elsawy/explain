@@ -9,21 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - os: linux
-            arch: amd64
-          - os: linux
-            arch: arm64
-          - os: linux
-            arch: 386
-          - os: darwin
-            arch: amd64
-          - os: darwin
-            arch: arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -33,23 +20,26 @@ jobs:
         with:
           go-version: 'stable'
 
-      - name: Build binary
-        env:
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
-          CGO_ENABLED: 0
+      - name: Build all platform binaries
         run: |
           mkdir -p dist
-          go build -ldflags="-s -w -X main.Version=${{ github.ref_name }}" -o dist/explain ./cmd/explain
-          cd dist
-          tar -czvf "explain_${{ matrix.os }}_${{ matrix.arch }}.tar.gz" explain
-          rm -f explain
-          cd ..
+          TAG_NAME="${{ github.ref_name }}"
+          PLATFORMS=("linux/amd64" "linux/arm64" "linux/386" "darwin/amd64" "darwin/arm64")
+          for PLATFORM in "${PLATFORMS[@]}"; do
+            OS="${PLATFORM%/*}"
+            ARCH="${PLATFORM#*/}"
+            echo "Building for $OS/$ARCH..."
+            CGO_ENABLED=0 GOOS=$OS GOARCH=$ARCH go build -ldflags="-s -w -X main.Version=$TAG_NAME" -o "dist/explain" ./cmd/explain
+            tar -czvf "dist/explain_${OS}_${ARCH}.tar.gz" -C dist explain
+            rm -f dist/explain
+          done
 
-      - name: Upload Release Asset
+      - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*.tar.gz
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

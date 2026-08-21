@@ -23,31 +23,50 @@ type githubRelease struct {
 	Body    string `json:"body"`
 }
 
-// FetchLatestVersion gets the latest release tag from GitHub.
+type githubTag struct {
+	Name string `json:"name"`
+}
+
+// FetchLatestVersion gets the latest release or tag from GitHub.
 func FetchLatestVersion() (string, error) {
 	client := &http.Client{Timeout: 5 * time.Second}
+
+	// 1. Try releases/latest first
 	req, err := http.NewRequest("GET", "https://api.github.com/repos/"+Repo+"/releases/latest", nil)
+	if err == nil {
+		req.Header.Set("User-Agent", "explain-cli-updater")
+		resp, err := client.Do(req)
+		if err == nil {
+			defer resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				var rel githubRelease
+				if err := json.NewDecoder(resp.Body).Decode(&rel); err == nil && rel.TagName != "" {
+					return rel.TagName, nil
+				}
+			}
+		}
+	}
+
+	// 2. Fallback to /tags
+	reqTags, err := http.NewRequest("GET", "https://api.github.com/repos/"+Repo+"/tags", nil)
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("User-Agent", "explain-cli-updater")
-
-	resp, err := client.Do(req)
+	reqTags.Header.Set("User-Agent", "explain-cli-updater")
+	respTags, err := client.Do(reqTags)
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer respTags.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("GitHub API returned status %d", resp.StatusCode)
+	if respTags.StatusCode == http.StatusOK {
+		var tags []githubTag
+		if err := json.NewDecoder(respTags.Body).Decode(&tags); err == nil && len(tags) > 0 {
+			return tags[0].Name, nil
+		}
 	}
 
-	var rel githubRelease
-	if err := json.NewDecoder(resp.Body).Decode(&rel); err != nil {
-		return "", err
-	}
-
-	return rel.TagName, nil
+	return "", fmt.Errorf("no releases or tags found on GitHub repository (%s)", Repo)
 }
 
 // SelfUpdate downloads and replaces the current binary with the latest release.
@@ -62,8 +81,8 @@ func SelfUpdate(currentVersion string) error {
 	cleanCurrent := strings.TrimPrefix(currentVersion, "v")
 	cleanLatest := strings.TrimPrefix(latestTag, "v")
 
-	if cleanCurrent == cleanLatest && cleanCurrent != "" {
-		fmt.Printf("%s explain is already at the latest version (%s)\n", ui.Colorize(ui.BoldGreen, "✅"), ui.Colorize(ui.BoldWhite, latestTag))
+	if (cleanCurrent == cleanLatest && cleanCurrent != "") || cleanCurrent >= cleanLatest {
+		fmt.Printf("%s explain is already up to date (%s)\n", ui.Colorize(ui.BoldGreen, "✅"), ui.Colorize(ui.BoldWhite, currentVersion))
 		return nil
 	}
 
