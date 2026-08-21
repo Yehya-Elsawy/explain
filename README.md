@@ -72,6 +72,7 @@ explain tar -xzf backup.tar.gz
 - **📖 Dynamic Man & Help Fallback**: Real-time extraction from local `man` pages and `--help` for any unlisted command installed on your system.
 - **🎨 Modern & Compact Terminal UI**: Beautiful ANSI colors and aligned columns designed to give you everything in 5–8 clean lines.
 - **🚀 Interactive Safe Runner**: Use `explain -i` to paste complex pipelines without quotes, or `explain -r "<command>"` to execute with confirmation.
+- **🔄 Built-in Self Updater**: Run `explain update` to automatically upgrade to the latest GitHub release.
 
 ---
 
@@ -83,20 +84,26 @@ explain tar -xzf backup.tar.gz
 
 ---
 
-## 🚀 Installation
+## 🚀 Installation & Updating
 
-### Option 1: One-Line Installer (Recommended)
+### 1. One-Line Installer (Recommended)
 Works on any Linux distribution and macOS:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Yehya-Elsawy/explain-/main/scripts/install.sh | bash
 ```
 
-### Option 2: Go Install
+### 2. Updating `explain` to Latest Release
+Whenever a new version is released, simply run:
+```bash
+explain update
+```
+
+### 3. Go Install
 ```bash
 go install github.com/Yehya-Elsawy/explain-/cmd/explain@latest
 ```
 
-### Option 3: Build from Source
+### 4. Build from Source
 ```bash
 git clone https://github.com/Yehya-Elsawy/explain-.git
 cd explain-
@@ -113,6 +120,7 @@ USAGE:
   explain <command with arguments>
   explain "<piped | or compound command>"
   explain -i (interactive mode - no quotes needed)
+  explain update (auto-update to latest release)
 
 EXAMPLES:
   explain tar -xzf backup.tar.gz
@@ -125,9 +133,10 @@ EXAMPLES:
 OPTIONS:
   -i, --interactive Launch interactive mode (paste complex pipelines without quotes)
   -r, --run         Ask to run the command after explaining it
+  -u, --update      Update explain CLI to the latest version from GitHub
   --json            Output structured analysis in JSON format
   --no-color        Disable colored output
-  -v, --version     Show explain version
+  -v, --version     Show current explain version
   -h, --help        Show help message
 ```
 
