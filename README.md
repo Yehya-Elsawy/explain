@@ -2,7 +2,7 @@
 
 # 💡 explain
 
-**Understand the command before you run it.**  
+**Demystify Linux terminal commands in seconds.**  
 *A lightweight, zero-dependency, 100% offline CLI tool written in Go that breaks down complex terminal commands, explains their flags, and highlights safety risks before you run them.*
 
 <br/>
@@ -46,7 +46,7 @@
 
 ---
 
-## Why `explain`?
+## 🎯 Why `explain`?
 
 When beginners copy commands from ChatGPT, StackOverflow, or tutorials, they often don't know what cryptic flags (`-xzvf`, `-laht`, `-p 8080:80`, `| sh`) actually do.
 
@@ -62,21 +62,22 @@ explain tar -xzf backup.tar.gz
 
 ---
 
-## Features
+## ✨ Features
 
-- **Zero Dependencies & 100% Offline**: Single static binary (<5MB). Instant execution (<5ms) with no network calls or API keys required.
-- **Smart Flag Decomposition**: Unpacks clustered short flags (e.g., `-xzvf` $\to$ `-x`, `-z`, `-v`, `-f`) and maps them to their values.
-- **Shell Builtins & Navigation**: Understands `cd`, `pwd`, `echo`, `export`, `alias`, `clear`, and path transitions (`..`, `~`, `-`).
-- **Pipeline & Redirect Aware**: Understands multi-stage pipelines (`ps aux | grep nginx | awk ...`) and I/O redirections (`>`, `>>`, `2>&1`).
-- **Safety & Danger Meter**: Warns against destructive operations (`rm -rf /`, `dd of=/dev/sdX`, `chmod 777`, `curl ... | bash`).
-- **Dynamic Man & Help Fallback**: Real-time extraction from local `man` pages and `--help` for any unlisted command installed on your system.
-- **Modern & Compact Terminal UI**: Beautiful ANSI colors and aligned columns designed to give you everything in 5–8 clean lines.
-- **Interactive Safe Runner**: Use `explain -i` to paste complex pipelines without quotes, or `explain -r "<command>"` to execute with confirmation.
-- **Built-in Self Updater**: Run `explain update` to automatically upgrade to the latest GitHub release.
+- **⚡ Zero Dependencies & 100% Offline**: Single static binary (<5MB). Instant execution (<5ms) with no network calls or API keys required.
+- **🧩 Smart Flag Decomposition**: Unpacks clustered short flags (e.g., `-xzvf` $\to$ `-x`, `-z`, `-v`, `-f`) and maps them to their values.
+- **💬 Shell Builtins & Navigation**: Understands `cd`, `pwd`, `echo`, `export`, `alias`, `clear`, and path transitions (`..`, `~`, `-`).
+- **🔗 Pipeline & Redirect Aware**: Understands multi-stage pipelines (`ps aux | grep nginx | awk ...`) and I/O redirections (`>`, `>>`, `2>&1`).
+- **🛡️ Safety & Danger Meter**: Warns against destructive operations (`rm -rf /`, `dd of=/dev/sdX`, `chmod 777`, `curl ... | bash`).
+- **📖 Dynamic Man & Help Fallback**: Real-time extraction from local `man` pages and `--help` for any unlisted command installed on your system.
+- **🎨 Modern & Compact Terminal UI**: Beautiful ANSI colors and aligned columns designed to give you everything in 5–8 clean lines.
+- **⏪ Explain Last Command**: Explain previous commands effortlessly via `explain !!` or `explain-last`.
+- **🚀 Interactive Safe Runner**: Use `explain -i` to paste complex pipelines without quotes, or `explain -r "<command>"` to execute with confirmation.
+- **🔄 Built-in Self Updater**: Run `explain update` to automatically upgrade to the latest GitHub release.
 
 ---
 
-## Safety & Hazard Detection
+## 🛡️ Safety & Hazard Detection
 
 <div align="center">
   <img src="assets/danger.svg" alt="explain safety hazard demo" width="850"/>
@@ -84,7 +85,7 @@ explain tar -xzf backup.tar.gz
 
 ---
 
-## Installation & Updating
+## 🚀 Installation & Updating
 
 ### 1. One-Line Installer (Recommended)
 Works on any Linux distribution and macOS:
@@ -92,16 +93,25 @@ Works on any Linux distribution and macOS:
 curl -fsSL https://raw.githubusercontent.com/Yehya-Elsawy/explain/main/scripts/install.sh | bash
 ```
 
-### 2. Go Install
-```bash
-go install github.com/Yehya-Elsawy/explain/cmd/explain@latest
-```
-
-### 3. Updating `explain` to Latest Release
+### 2. Updating `explain` to Latest Release
 Whenever a new version is released, simply run:
 ```bash
 explain update
 ```
+
+### 3. Go Install
+```bash
+go install github.com/Yehya-Elsawy/explain/cmd/explain@latest
+```
+
+### 4. Build from Source
+```bash
+git clone https://github.com/Yehya-Elsawy/explain.git
+cd explain
+make
+make install
+```
+
 ---
 
 ## 📖 CLI Usage
@@ -110,40 +120,56 @@ explain update
 USAGE:
   explain <command with arguments>
   explain "<piped | or compound command>"
-  explain -i (interactive mode - no quotes needed)
+  explain !! (explain the last executed command)
   explain update (auto-update to latest release)
+  explain -i (interactive mode - no quotes needed)
 
 EXAMPLES:
   explain tar -xzf backup.tar.gz
   explain cd /home/
+  explain !!
   explain "rm -rf /tmp/cache"
   explain "find . -name '*.log' -mtime +30 -delete"
   explain "ps aux | grep nginx | awk '{print $2}' | xargs kill -9"
   explain "curl -fsSL https://get.docker.com | sh"
 
-OPTIONS:
+COMMANDS & OPTIONS:
+  explain update    Check and upgrade explain to the latest release from GitHub
   -i, --interactive Launch interactive mode (paste complex pipelines without quotes)
   -r, --run         Ask to run the command after explaining it
-  -u, --update      Update explain CLI to the latest version from GitHub
   --json            Output structured analysis in JSON format
   --no-color        Disable colored output
   -v, --version     Show current explain version
-  -h, --help        Show help message
+  -h, --help        Show this help message
 ```
 
 ---
 
-## Shell Integration (Bonus)
+## 💡 Shell Integration (Bonus)
 
-Add this alias to your `~/.bashrc` or `~/.zshrc` to quickly explain your last executed terminal command:
+### 1. Explain Last Command Directly
+Type in your terminal:
+```bash
+explain !!
+```
+
+### 2. The `explain-last` Helper
+Add this function to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
-alias explain-last='explain "!!" '
+explain-last() {
+  local last_cmd
+  last_cmd=$(fc -ln -1 | sed 's/^[[:space:]]*//')
+  if [ -n "$last_cmd" ]; then
+    explain "$last_cmd"
+  fi
+}
 ```
+Then reload (`source ~/.bashrc`), and simply type `explain-last` to explain whatever command you ran previously!
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! To add support for more commands or flags, feel free to open a Pull Request.
 
@@ -157,6 +183,6 @@ make build
 
 ---
 
-## License
+## 📄 License
 
 Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
