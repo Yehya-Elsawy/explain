@@ -147,14 +147,19 @@ COMMANDS & OPTIONS:
 
 ## 💡 Shell Integration (Bonus)
 
-### Option 1: Native Terminal Shortcut
-Directly explain your last command using standard shell expansion:
+Want to explain the command you just executed without retyping or copying it?
+
+### Option 1: Direct Terminal Shortcut (No Setup Needed)
+Simply type:
 ```bash
 explain !!
 ```
 
-### Option 2: Dedicated `explain-last` Helper
-Add this smart helper function to your `~/.bashrc` or `~/.zshrc`:
+---
+
+### Option 2: Dedicated `explain-last` Shortcut (Recommended)
+
+Add this function to your `~/.bashrc` (or `~/.zshrc` if you use Zsh):
 
 ```bash
 explain-last() {
@@ -174,7 +179,17 @@ explain-last() {
   done
 }
 ```
-Then reload (`source ~/.bashrc`), and type `explain-last` whenever you want to inspect your previous command!
+
+Then reload your shell configuration:
+```bash
+source ~/.bashrc   # or: source ~/.zshrc
+```
+
+Now, anytime you run a command and want to inspect what it just did, just type:
+```bash
+cd /var/log
+explain-last
+```
 
 ---
 
