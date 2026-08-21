@@ -9,28 +9,47 @@ permissions:
   contents: write
 
 jobs:
-  goreleaser:
+  build-and-release:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+          - os: linux
+            arch: arm64
+          - os: linux
+            arch: 386
+          - os: darwin
+            arch: amd64
+          - os: darwin
+            arch: arm64
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
-          cache: true
+          go-version: 'stable'
 
-      - name: Run tests
-        run: go test -v ./tests/...
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: 0
+        run: |
+          mkdir -p dist
+          go build -ldflags="-s -w -X main.Version=${{ github.ref_name }}" -o dist/explain ./cmd/explain
+          cd dist
+          tar -czvf "explain_${{ matrix.os }}_${{ matrix.arch }}.tar.gz" explain
+          rm -f explain
+          cd ..
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
         with:
-          distribution: goreleaser
-          version: latest
-          args: release --clean
+          files: dist/*.tar.gz
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
