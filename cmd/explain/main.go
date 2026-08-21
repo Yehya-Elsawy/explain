@@ -34,12 +34,14 @@ func printHelp() {
 %s
   explain <command with arguments>
   explain "<piped | or compound command>"
+  explain !! (explain the last executed command)
   explain update (update explain to the latest version)
   explain -i (interactive mode - no quotes needed)
 
 %s
   explain tar -xzf backup.tar.gz
   explain cd /home/
+  explain !!
   explain "ps aux | grep nginx | awk '{print $2}' | xargs kill -9"
   explain "curl -fsSL https://get.docker.com | sh"
   explain "rm -rf /tmp/cache"
@@ -85,6 +87,13 @@ func runInteractive() {
 		}
 		if input == "exit" || input == "quit" || input == "q" {
 			break
+		}
+
+		if input == "!!" {
+			lastCmd := ast.GetLastHistoryCommand()
+			if lastCmd != "" {
+				input = lastCmd
+			}
 		}
 
 		pipeline, err := ast.Parse(input)
@@ -187,6 +196,17 @@ func main() {
 	}
 
 	rawInput := strings.Join(cmdTokens, " ")
+
+	// Handle !! (explain last history command)
+	trimmed := strings.TrimSpace(rawInput)
+	if trimmed == "!!" || trimmed == "\"!!\"" || trimmed == "'!!'" {
+		lastCmd := ast.GetLastHistoryCommand()
+		if lastCmd != "" {
+			fmt.Printf("  %s %s\n", ui.Colorize(ui.Dim, "Explaining last command:"), ui.Colorize(ui.BoldYellow, lastCmd))
+			rawInput = lastCmd
+		}
+	}
+
 	pipeline, err := ast.Parse(rawInput)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing command: %v\n", err)
