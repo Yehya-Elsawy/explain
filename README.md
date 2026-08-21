@@ -147,25 +147,34 @@ COMMANDS & OPTIONS:
 
 ## 💡 Shell Integration (Bonus)
 
-### 1. Explain Last Command Directly
-Type in your terminal:
+### Option 1: Native Terminal Shortcut
+Directly explain your last command using standard shell expansion:
 ```bash
 explain !!
 ```
 
-### 2. The `explain-last` Helper
-Add this function to your `~/.bashrc` or `~/.zshrc`:
+### Option 2: Dedicated `explain-last` Helper
+Add this smart helper function to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
 explain-last() {
-  local last_cmd
-  last_cmd=$(fc -ln -1 | sed 's/^[[:space:]]*//')
-  if [ -n "$last_cmd" ]; then
-    explain "$last_cmd"
-  fi
+  local cmd i=1
+  while [ $i -le 10 ]; do
+    cmd=$(fc -ln -$i -$i 2>/dev/null | sed 's/^[[:space:]]*//')
+    [ -z "$cmd" ] && break
+    case "$cmd" in
+      explain-last*|explain_last*|explain\ !!*)
+        i=$((i+1))
+        ;;
+      *)
+        explain "$cmd"
+        return
+        ;;
+    esac
+  done
 }
 ```
-Then reload (`source ~/.bashrc`), and simply type `explain-last` to explain whatever command you ran previously!
+Then reload (`source ~/.bashrc`), and type `explain-last` whenever you want to inspect your previous command!
 
 ---
 
