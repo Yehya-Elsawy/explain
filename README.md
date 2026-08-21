@@ -92,25 +92,16 @@ Works on any Linux distribution and macOS:
 curl -fsSL https://raw.githubusercontent.com/Yehya-Elsawy/explain/main/scripts/install.sh | bash
 ```
 
-### 2. Updating `explain` to Latest Release
-Whenever a new version is released, simply run:
-```bash
-explain update
-```
-
-### 3. Go Install
+### 2. Go Install
 ```bash
 go install github.com/Yehya-Elsawy/explain/cmd/explain@latest
 ```
 
-### 4. Build from Source
+### 3. Updating `explain` to Latest Release
+Whenever a new version is released, simply run:
 ```bash
-git clone https://github.com/Yehya-Elsawy/explain.git
-cd explain-
-make
-make install
+explain update
 ```
-
 ---
 
 ## 📖 CLI Usage
