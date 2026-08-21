@@ -46,7 +46,7 @@
 
 ---
 
-## 🎯 Why `explain`?
+## Why `explain`?
 
 When beginners copy commands from ChatGPT, StackOverflow, or tutorials, they often don't know what cryptic flags (`-xzvf`, `-laht`, `-p 8080:80`, `| sh`) actually do.
 
@@ -62,21 +62,21 @@ explain tar -xzf backup.tar.gz
 
 ---
 
-## ✨ Features
+## Features
 
-- **⚡ Zero Dependencies & 100% Offline**: Single static binary (<5MB). Instant execution (<5ms) with no network calls or API keys required.
-- **🧩 Smart Flag Decomposition**: Unpacks clustered short flags (e.g., `-xzvf` $\to$ `-x`, `-z`, `-v`, `-f`) and maps them to their values.
-- **💬 Shell Builtins & Navigation**: Understands `cd`, `pwd`, `echo`, `export`, `alias`, `clear`, and path transitions (`..`, `~`, `-`).
-- **🔗 Pipeline & Redirect Aware**: Understands multi-stage pipelines (`ps aux | grep nginx | awk ...`) and I/O redirections (`>`, `>>`, `2>&1`).
-- **🛡️ Safety & Danger Meter**: Warns against destructive operations (`rm -rf /`, `dd of=/dev/sdX`, `chmod 777`, `curl ... | bash`).
-- **📖 Dynamic Man & Help Fallback**: Real-time extraction from local `man` pages and `--help` for any unlisted command installed on your system.
-- **🎨 Modern & Compact Terminal UI**: Beautiful ANSI colors and aligned columns designed to give you everything in 5–8 clean lines.
-- **🚀 Interactive Safe Runner**: Use `explain -i` to paste complex pipelines without quotes, or `explain -r "<command>"` to execute with confirmation.
-- **🔄 Built-in Self Updater**: Run `explain update` to automatically upgrade to the latest GitHub release.
+- **Zero Dependencies & 100% Offline**: Single static binary (<5MB). Instant execution (<5ms) with no network calls or API keys required.
+- **Smart Flag Decomposition**: Unpacks clustered short flags (e.g., `-xzvf` $\to$ `-x`, `-z`, `-v`, `-f`) and maps them to their values.
+- **Shell Builtins & Navigation**: Understands `cd`, `pwd`, `echo`, `export`, `alias`, `clear`, and path transitions (`..`, `~`, `-`).
+- **Pipeline & Redirect Aware**: Understands multi-stage pipelines (`ps aux | grep nginx | awk ...`) and I/O redirections (`>`, `>>`, `2>&1`).
+- **Safety & Danger Meter**: Warns against destructive operations (`rm -rf /`, `dd of=/dev/sdX`, `chmod 777`, `curl ... | bash`).
+- **Dynamic Man & Help Fallback**: Real-time extraction from local `man` pages and `--help` for any unlisted command installed on your system.
+- **Modern & Compact Terminal UI**: Beautiful ANSI colors and aligned columns designed to give you everything in 5–8 clean lines.
+- **Interactive Safe Runner**: Use `explain -i` to paste complex pipelines without quotes, or `explain -r "<command>"` to execute with confirmation.
+- **Built-in Self Updater**: Run `explain update` to automatically upgrade to the latest GitHub release.
 
 ---
 
-## 🛡️ Safety & Hazard Detection
+## Safety & Hazard Detection
 
 <div align="center">
   <img src="assets/danger.svg" alt="explain safety hazard demo" width="850"/>
@@ -84,7 +84,7 @@ explain tar -xzf backup.tar.gz
 
 ---
 
-## 🚀 Installation & Updating
+## Installation & Updating
 
 ### 1. One-Line Installer (Recommended)
 Works on any Linux distribution and macOS:
@@ -142,7 +142,7 @@ OPTIONS:
 
 ---
 
-## 💡 Shell Integration (Bonus)
+## Shell Integration (Bonus)
 
 Add this alias to your `~/.bashrc` or `~/.zshrc` to quickly explain your last executed terminal command:
 
