@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"strings"
 
 	"github.com/Yehya-Elsawy/explain/pkg/analyzer"
@@ -16,6 +17,14 @@ import (
 )
 
 var Version = "v1.0.1"
+
+func init() {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		if info.Main.Version != "" && info.Main.Version != "(devel)" {
+			Version = info.Main.Version
+		}
+	}
+}
 
 func printHelp() {
 	ui.InitColors(false)
