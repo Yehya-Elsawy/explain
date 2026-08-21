@@ -152,7 +152,7 @@ alias explain-last='explain "!!" '
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! To add support for more commands or flags, feel free to open a Pull Request.
 
@@ -166,6 +166,6 @@ make build
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
