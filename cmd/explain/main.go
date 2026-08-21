@@ -15,7 +15,7 @@ import (
 	"github.com/Yehya-Elsawy/explain/pkg/updater"
 )
 
-var Version = "v1.0.0"
+var Version = "v1.0.1"
 
 func printHelp() {
 	ui.InitColors(false)

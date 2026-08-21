@@ -1,6 +1,6 @@
 BINARY_NAME=explain
 BUILD_DIR=bin
-VERSION?=$(shell git describe --tags --always 2>/dev/null || echo "v1.0.0")
+VERSION?=$(shell git describe --tags --always 2>/dev/null || echo "v1.0.1")
 
 ifeq ($(shell id -u), 0)
     PREFIX?=/usr/local
