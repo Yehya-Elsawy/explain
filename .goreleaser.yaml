@@ -34,7 +34,7 @@ archives:
 nfpms:
   - maintainer: explain contributors
     description: Linux command explainer for beginners
-    homepage: https://github.com/Yehya-Elsawy/explain-
+    homepage: https://github.com/Yehya-Elsawy/explain
     license: MIT
     formats:
       - deb

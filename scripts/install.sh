@@ -33,7 +33,7 @@ case "$ARCH" in
     *) echo -e "${RED}Unsupported architecture: $ARCH${NC}"; exit 1 ;;
 esac
 
-REPO="Yehya-Elsawy/explain-"
+REPO="Yehya-Elsawy/explain"
 LATEST_URL="https://github.com/$REPO/releases/latest/download/explain_${OS}_${ARCH}.tar.gz"
 
 echo -e "${YELLOW}⬇️  Downloading explain binary for ${OS}/${ARCH}...${NC}"

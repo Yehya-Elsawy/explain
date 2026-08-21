@@ -3,8 +3,8 @@ package analyzer
 import (
 	"strings"
 
-	"github.com/Yehya-Elsawy/explain-/pkg/ast"
-	"github.com/Yehya-Elsawy/explain-/pkg/database"
+	"github.com/Yehya-Elsawy/explain/pkg/ast"
+	"github.com/Yehya-Elsawy/explain/pkg/database"
 )
 
 // DangerInfo contains the safety rating and warning messages for a command.

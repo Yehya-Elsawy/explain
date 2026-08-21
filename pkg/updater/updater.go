@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Yehya-Elsawy/explain-/pkg/ui"
+	"github.com/Yehya-Elsawy/explain/pkg/ui"
 )
 
-const Repo = "Yehya-Elsawy/explain-"
+const Repo = "Yehya-Elsawy/explain"
 
 type githubRelease struct {
 	TagName string `json:"tag_name"`

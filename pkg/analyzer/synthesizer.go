@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Yehya-Elsawy/explain-/pkg/ast"
+	"github.com/Yehya-Elsawy/explain/pkg/ast"
 )
 
 // SynthesizeAction generates a concise plain-English sentence summarizing the exact command action.

@@ -9,10 +9,10 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/Yehya-Elsawy/explain-/pkg/analyzer"
-	"github.com/Yehya-Elsawy/explain-/pkg/ast"
-	"github.com/Yehya-Elsawy/explain-/pkg/ui"
-	"github.com/Yehya-Elsawy/explain-/pkg/updater"
+	"github.com/Yehya-Elsawy/explain/pkg/analyzer"
+	"github.com/Yehya-Elsawy/explain/pkg/ast"
+	"github.com/Yehya-Elsawy/explain/pkg/ui"
+	"github.com/Yehya-Elsawy/explain/pkg/updater"
 )
 
 var Version = "v1.0.2"

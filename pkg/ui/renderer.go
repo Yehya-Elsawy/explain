@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Yehya-Elsawy/explain-/pkg/analyzer"
-	"github.com/Yehya-Elsawy/explain-/pkg/database"
+	"github.com/Yehya-Elsawy/explain/pkg/analyzer"
+	"github.com/Yehya-Elsawy/explain/pkg/database"
 )
 
 // RenderPipeline renders the complete formatted explanation to stdout.

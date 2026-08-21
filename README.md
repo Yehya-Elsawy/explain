@@ -7,10 +7,10 @@
 
 <br/>
 
-[![Version](https://img.shields.io/github/v/tag/Yehya-Elsawy/explain-?color=brightgreen&label=version&logo=github)](https://github.com/Yehya-Elsawy/explain-/releases)
+[![Version](https://img.shields.io/github/v/tag/Yehya-Elsawy/explain?color=brightgreen&label=version&logo=github)](https://github.com/Yehya-Elsawy/explain/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go&logoColor=white)](https://golang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20WSL-blue?logo=linux&logoColor=white)](https://github.com/Yehya-Elsawy/explain-#-supported-platforms--distributions)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20WSL-blue?logo=linux&logoColor=white)](https://github.com/Yehya-Elsawy/explain#-supported-platforms--distributions)
 
 <br/>
 
@@ -89,7 +89,7 @@ explain tar -xzf backup.tar.gz
 ### 1. One-Line Installer (Recommended)
 Works on any Linux distribution and macOS:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Yehya-Elsawy/explain-/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Yehya-Elsawy/explain/main/scripts/install.sh | bash
 ```
 
 ### 2. Updating `explain` to Latest Release
@@ -100,12 +100,12 @@ explain update
 
 ### 3. Go Install
 ```bash
-go install github.com/Yehya-Elsawy/explain-/cmd/explain@latest
+go install github.com/Yehya-Elsawy/explain/cmd/explain@latest
 ```
 
 ### 4. Build from Source
 ```bash
-git clone https://github.com/Yehya-Elsawy/explain-.git
+git clone https://github.com/Yehya-Elsawy/explain.git
 cd explain-
 make
 make install

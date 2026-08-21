@@ -3,9 +3,9 @@ package analyzer
 import (
 	"strings"
 
-	"github.com/Yehya-Elsawy/explain-/pkg/ast"
-	"github.com/Yehya-Elsawy/explain-/pkg/database"
-	"github.com/Yehya-Elsawy/explain-/pkg/manparser"
+	"github.com/Yehya-Elsawy/explain/pkg/ast"
+	"github.com/Yehya-Elsawy/explain/pkg/database"
+	"github.com/Yehya-Elsawy/explain/pkg/manparser"
 )
 
 // ExplainedItem represents a single token/flag/argument breakdown item.

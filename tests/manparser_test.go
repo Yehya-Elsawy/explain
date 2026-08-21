@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/Yehya-Elsawy/explain-/pkg/manparser"
+	"github.com/Yehya-Elsawy/explain/pkg/manparser"
 )
 
 func TestStripOverstrike(t *testing.T) {

@@ -3,9 +3,9 @@ package tests
 import (
 	"testing"
 
-	"github.com/Yehya-Elsawy/explain-/pkg/analyzer"
-	"github.com/Yehya-Elsawy/explain-/pkg/ast"
-	"github.com/Yehya-Elsawy/explain-/pkg/database"
+	"github.com/Yehya-Elsawy/explain/pkg/analyzer"
+	"github.com/Yehya-Elsawy/explain/pkg/ast"
+	"github.com/Yehya-Elsawy/explain/pkg/database"
 )
 
 func TestAnalyzeCdCommand(t *testing.T) {
