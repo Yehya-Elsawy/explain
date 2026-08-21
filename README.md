@@ -2,7 +2,7 @@
 
 # 💡 explain
 
-**Demystify Linux terminal commands in seconds.**  
+**Understand the command before you run it.**  
 *A lightweight, zero-dependency, 100% offline CLI tool written in Go that breaks down complex terminal commands, explains their flags, and highlights safety risks before you run them.*
 
 <br/>
