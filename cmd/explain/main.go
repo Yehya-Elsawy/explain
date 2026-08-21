@@ -12,9 +12,10 @@ import (
 	"github.com/Yehya-Elsawy/explain-/pkg/analyzer"
 	"github.com/Yehya-Elsawy/explain-/pkg/ast"
 	"github.com/Yehya-Elsawy/explain-/pkg/ui"
+	"github.com/Yehya-Elsawy/explain-/pkg/updater"
 )
 
-const Version = "1.0.0"
+var Version = "v1.0.2"
 
 func printHelp() {
 	ui.InitColors(false)
@@ -25,6 +26,7 @@ func printHelp() {
   explain <command with arguments>
   explain "<piped | or compound command>"
   explain -i (interactive mode - no quotes needed)
+  explain update (update explain to the latest release)
 
 %s
   explain tar -xzf backup.tar.gz
@@ -36,16 +38,17 @@ func printHelp() {
 %s
   -i, --interactive Launch interactive mode (paste complex pipelines without quotes)
   -r, --run         Ask to run the command after explaining it
+  -u, --update      Update explain CLI to the latest version from GitHub
   --json            Output structured analysis in JSON format
   --no-color        Disable colored output
-  -v, --version     Show explain version
+  -v, --version     Show current explain version
   -h, --help        Show this help message
 
 %s
   Why quotes for pipes? The shell intercepts '|', '>', '&&' before passing them to programs.
   In interactive mode (explain -i), you can paste complex pipelines directly without any quotes!
 `,
-		ui.Colorize(ui.BoldCyan, "explain v"+Version),
+		ui.Colorize(ui.BoldCyan, "explain "+Version),
 		ui.Colorize(ui.BoldWhite, "USAGE:"),
 		ui.Colorize(ui.BoldWhite, "EXAMPLES:"),
 		ui.Colorize(ui.BoldWhite, "OPTIONS:"),
@@ -56,7 +59,7 @@ func printHelp() {
 func runInteractive() {
 	ui.InitColors(false)
 	fmt.Println()
-	fmt.Println(ui.Colorize(ui.BoldCyan, "  💡 explain interactive mode"))
+	fmt.Println(ui.Colorize(ui.BoldCyan, "  💡 explain interactive mode ("+Version+")"))
 	fmt.Println(ui.Colorize(ui.Dim, "  Type or paste any command with pipes (|), redirects (>), or operators (no quotes needed)."))
 	fmt.Println(ui.Colorize(ui.Dim, "  Type 'exit' or press Ctrl+C to quit.\n"))
 
@@ -117,6 +120,7 @@ func main() {
 	outputJSON := false
 	runAfter := false
 	interactive := false
+	doUpdate := false
 	var cmdTokens []string
 
 	for i := 0; i < len(args); i++ {
@@ -125,9 +129,13 @@ func main() {
 			printHelp()
 			return
 		}
-		if arg == "-v" || arg == "--version" {
-			fmt.Printf("explain version %s\n", Version)
+		if arg == "-v" || arg == "--version" || arg == "version" {
+			fmt.Printf("explain %s\n", Version)
 			return
+		}
+		if arg == "update" || arg == "--update" || arg == "-u" {
+			doUpdate = true
+			break
 		}
 		if arg == "-i" || arg == "--interactive" {
 			interactive = true
@@ -150,6 +158,14 @@ func main() {
 	}
 
 	ui.InitColors(disableColor)
+
+	if doUpdate {
+		if err := updater.SelfUpdate(Version); err != nil {
+			fmt.Fprintf(os.Stderr, "%s %v\n", ui.Colorize(ui.BoldRed, "Error:"), err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	if interactive {
 		runInteractive()
