@@ -16,7 +16,7 @@ import (
 	"github.com/Yehya-Elsawy/explain/pkg/updater"
 )
 
-var Version = "v1.0.3"
+var Version = "v1.1.0"
 
 func init() {
 	if info, ok := debug.ReadBuildInfo(); ok {
@@ -48,6 +48,7 @@ func printHelp() {
 
 %s
   explain update    Check and upgrade explain to the latest release from GitHub
+  explain uninstall Remove explain CLI from your system
   -i, --interactive Launch interactive mode (paste complex pipelines without quotes)
   -r, --run         Ask to run the command after explaining it
   --json            Output structured analysis in JSON format
@@ -139,6 +140,7 @@ func main() {
 	runAfter := false
 	interactive := false
 	doUpdate := false
+	doUninstall := false
 	var cmdTokens []string
 
 	for i := 0; i < len(args); i++ {
@@ -153,6 +155,10 @@ func main() {
 		}
 		if arg == "update" || arg == "--update" || arg == "-u" {
 			doUpdate = true
+			break
+		}
+		if arg == "uninstall" || arg == "--uninstall" {
+			doUninstall = true
 			break
 		}
 		if arg == "-i" || arg == "--interactive" {
@@ -182,6 +188,11 @@ func main() {
 			fmt.Fprintf(os.Stderr, "%s %v\n", ui.Colorize(ui.BoldRed, "Error:"), err)
 			os.Exit(1)
 		}
+		return
+	}
+
+	if doUninstall {
+		runUninstall()
 		return
 	}
 
@@ -247,5 +258,60 @@ func main() {
 				os.Exit(1)
 			}
 		}
+	}
+}
+
+func runUninstall() {
+	ui.InitColors(false)
+	fmt.Println()
+
+	execPath, err := os.Executable()
+	if err != nil {
+		execPath = ""
+	}
+
+	targets := []string{}
+	if execPath != "" {
+		targets = append(targets, execPath)
+	}
+
+	home, _ := os.UserHomeDir()
+	if home != "" {
+		targets = append(targets, home+"/.local/bin/explain")
+	}
+	targets = append(targets, "/usr/local/bin/explain")
+
+	removedAny := false
+	seen := make(map[string]bool)
+
+	for _, path := range targets {
+		if seen[path] {
+			continue
+		}
+		seen[path] = true
+
+		if _, err := os.Stat(path); err == nil {
+			err := os.Remove(path)
+			if err != nil {
+				// Try removing with sudo if permission denied
+				execCmd := exec.Command("sudo", "rm", "-f", path)
+				if err2 := execCmd.Run(); err2 == nil {
+					fmt.Printf("  %s Removed %s\n", ui.Colorize(ui.BoldGreen, "✓"), path)
+					removedAny = true
+				} else {
+					fmt.Printf("  %s Could not remove %s (permission denied)\n", ui.Colorize(ui.BoldRed, "✗"), path)
+				}
+			} else {
+				fmt.Printf("  %s Removed %s\n", ui.Colorize(ui.BoldGreen, "✓"), path)
+				removedAny = true
+			}
+		}
+	}
+
+	if removedAny {
+		fmt.Println(ui.Colorize(ui.BoldGreen, "\n  Successfully uninstalled explain CLI."))
+		fmt.Println(ui.Colorize(ui.Dim, "  Thank you for using explain!\n"))
+	} else {
+		fmt.Println(ui.Colorize(ui.BoldYellow, "  No installed explain binary found to remove.\n"))
 	}
 }
