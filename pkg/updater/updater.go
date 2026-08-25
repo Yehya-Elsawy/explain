@@ -71,7 +71,8 @@ func FetchLatestVersion() (string, error) {
 
 // SelfUpdate downloads and replaces the current binary with the latest release.
 func SelfUpdate(currentVersion string) error {
-	fmt.Println(ui.Colorize(ui.BoldCyan, "🔍 Checking for updates on GitHub..."))
+	fmt.Println()
+	fmt.Printf("  %s %s\n", ui.Colorize(ui.BoldYellow, "[>]"), ui.Colorize(ui.BoldWhite, "Checking for updates on GitHub..."))
 
 	latestTag, err := FetchLatestVersion()
 	if err != nil {
@@ -82,17 +83,23 @@ func SelfUpdate(currentVersion string) error {
 	cleanLatest := strings.TrimPrefix(latestTag, "v")
 
 	if (cleanCurrent == cleanLatest && cleanCurrent != "") || cleanCurrent >= cleanLatest {
-		fmt.Printf("%s explain is already up to date (%s)\n", ui.Colorize(ui.BoldGreen, "✅"), ui.Colorize(ui.BoldWhite, currentVersion))
+		fmt.Printf("  %s %s %s\n\n", ui.Colorize(ui.BoldGreen, "✓"), ui.Colorize(ui.BoldGreen, "explain is already up to date"), ui.Colorize(ui.Dim, "("+currentVersion+")"))
 		return nil
 	}
 
-	fmt.Printf("🚀 Found new version: %s (current: %s)\n", ui.Colorize(ui.BoldGreen, latestTag), ui.Colorize(ui.Dim, currentVersion))
+	fmt.Printf("  %s %s %s %s\n",
+		ui.Colorize(ui.BoldYellow, "[>]"),
+		ui.Colorize(ui.BoldWhite, "Found new version:"),
+		ui.Colorize(ui.BoldGreen, latestTag),
+		ui.Colorize(ui.Dim, "(current: "+currentVersion+")"),
+	)
 
 	osName := runtime.GOOS
 	arch := runtime.GOARCH
 	downloadURL := fmt.Sprintf("https://github.com/%s/releases/download/%s/explain_%s_%s.tar.gz", Repo, latestTag, osName, arch)
 
-	fmt.Printf("⬇️  Downloading %s...\n", ui.Colorize(ui.Cyan, downloadURL))
+	fmt.Printf("  %s %s\n", ui.Colorize(ui.BoldYellow, "[>]"), ui.Colorize(ui.White, "Downloading binary for "+osName+"/"+arch+"..."))
+	showProgressBar()
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Get(downloadURL)
@@ -153,7 +160,19 @@ func SelfUpdate(currentVersion string) error {
 		return fmt.Errorf("failed to replace executable: %w", err)
 	}
 
-	fmt.Printf("\n%s Successfully updated explain to %s!\n", ui.Colorize(ui.BoldGreen, "🎉"), ui.Colorize(ui.BoldWhite, latestTag))
-	fmt.Printf("   Path: %s\n\n", ui.Colorize(ui.Dim, execPath))
+	fmt.Printf("\n  %s %s\n", ui.Colorize(ui.BoldGreen, "✓"), ui.Colorize(ui.BoldGreen, "Successfully updated explain to "+latestTag+"!"))
+	fmt.Printf("    %s %s\n\n", ui.Colorize(ui.Dim, "Binary path:"), ui.Colorize(ui.White, execPath))
 	return nil
+}
+
+func showProgressBar() {
+	width := 30
+	for i := 1; i <= width; i++ {
+		filled := strings.Repeat("█", i)
+		empty := strings.Repeat("░", width-i)
+		percent := (i * 100) / width
+		fmt.Printf("\r    %s%s%s%s %d%%", ui.Cyan, "["+filled, empty+"]", ui.Reset, percent)
+		time.Sleep(12 * time.Millisecond)
+	}
+	fmt.Printf("\r    %s[██████████████████████████████]%s 100%%\n", ui.Green, ui.Reset)
 }
