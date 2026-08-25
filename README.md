@@ -14,7 +14,7 @@
 
 <br/>
 
-<img src="assets/usage" alt="explain demo preview" width="850"/>
+<img src="assets/usage.jpg" alt="explain demo preview" width="850"/>
 
 </div>
 
