@@ -82,7 +82,7 @@ explain tar -xzf backup.tar.gz
 ## Safety & Hazard Detection
 
 <div align="center">
-  <img src="assets/danger.svg" alt="explain safety hazard demo" width="850"/>
+  <img src="assets/Safety.png" alt="explain safety hazard demo" width="850"/>
 </div>
 
 ---
