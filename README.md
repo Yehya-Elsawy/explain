@@ -64,6 +64,8 @@ explain tar -xzf backup.tar.gz
 
 ## Features
 
+<img src="assets/features.png" alt="explain demo preview" width="850"/>
+
 - **Zero Dependencies & 100% Offline**: Single static binary (<5MB). Instant execution (<5ms) with no network calls or API keys required.
 - **Smart Flag Decomposition**: Unpacks clustered short flags (e.g., `-xzvf` $\to$ `-x`, `-z`, `-v`, `-f`) and maps them to their values.
 - **Shell Builtins & Navigation**: Understands `cd`, `pwd`, `echo`, `export`, `alias`, `clear`, and path transitions (`..`, `~`, `-`).
