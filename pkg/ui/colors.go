@@ -7,11 +7,12 @@ import (
 var (
 	NoColor = false
 
-	Reset   = "\033[0m"
-	Bold    = "\033[1m"
-	Dim     = "\033[2m"
-	Italic  = "\033[3m"
-	
+	Reset     = "\033[0m"
+	Bold      = "\033[1m"
+	Dim       = "\033[2m"
+	Italic    = "\033[3m"
+	Underline = "\033[4m"
+
 	Red     = "\033[31m"
 	Green   = "\033[32m"
 	Yellow  = "\033[33m"
@@ -28,7 +29,10 @@ var (
 	BoldMagenta = "\033[1;35m"
 
 	BgRed    = "\033[41m"
+	BgGreen  = "\033[42m"
 	BgYellow = "\033[43m"
+	BgBlue   = "\033[44m"
+	BgCyan   = "\033[46m"
 )
 
 func InitColors(disableColor bool) {
@@ -38,6 +42,7 @@ func InitColors(disableColor bool) {
 		Bold = ""
 		Dim = ""
 		Italic = ""
+		Underline = ""
 		Red = ""
 		Green = ""
 		Yellow = ""
@@ -52,7 +57,10 @@ func InitColors(disableColor bool) {
 		BoldWhite = ""
 		BoldMagenta = ""
 		BgRed = ""
+		BgGreen = ""
 		BgYellow = ""
+		BgBlue = ""
+		BgCyan = ""
 	}
 }
 
