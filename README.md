@@ -2,8 +2,14 @@
 
 # 💡 explain
 
-**Understand the command before you run it.**  
-*A lightweight, zero-dependency, 100% offline CLI tool written in Go that breaks down complex terminal commands, explains their flags, and highlights safety risks before you run them.*
+**Understand the command before you run it.** 
+
+Linux shouldn't feel scary just because a command looks complicated.
+
+explain is a beginner-friendly CLI tool that helps you understand terminal commands, break down their flags, and spot potential risks before you run them.
+Lightweight, zero-dependency, and 100% offline built with Go.
+
+*Enjoy learning Linux more with explain :) .*
 
 <br/>
 
