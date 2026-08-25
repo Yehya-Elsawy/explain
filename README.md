@@ -105,16 +105,6 @@ Whenever a new version is released, simply run:
 explain update
 ```
 
-### 4. Uninstalling `explain`
-If you ever wish to remove `explain` from your system, simply run:
-```bash
-explain uninstall
-```
-Or via the one-line uninstaller script:
-```bash
-curl -fsSL https://raw.githubusercontent.com/Yehya-Elsawy/explain/main/scripts/uninstall.sh | bash
-```
-
 
 ---
 
@@ -126,7 +116,6 @@ USAGE:
   explain "<piped | or compound command>"
   explain !! (explain the last executed command)
   explain update (auto-update to latest release)
-  explain uninstall (remove explain from system)
   explain -i (interactive mode - no quotes needed)
 
 EXAMPLES:
@@ -140,7 +129,6 @@ EXAMPLES:
 
 COMMANDS & OPTIONS:
   explain update    Check and upgrade explain to the latest release from GitHub
-  explain uninstall Remove explain CLI from your system
   -i, --interactive Launch interactive mode (paste complex pipelines without quotes)
   -r, --run         Ask to run the command after explaining it
   --json            Output structured analysis in JSON format

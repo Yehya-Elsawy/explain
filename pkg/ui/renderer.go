@@ -14,80 +14,60 @@ func RenderPipeline(analysis *analyzer.PipelineAnalysis) {
 
 	numCmds := len(analysis.Commands)
 
-	// 1. Overall Pipeline Header (if multi-stage)
 	if numCmds > 1 {
-		renderPipelineOverview(analysis)
+		// Multi-stage pipeline overview
+		renderPipelineHeader(analysis)
 	}
 
-	// 2. Render each command stage
 	for idx, cmd := range analysis.Commands {
 		if numCmds > 1 {
 			stageNum := fmt.Sprintf("Stage %d of %d", idx+1, numCmds)
-			fmt.Printf("  %s %s\n", Colorize(BoldCyan, "┌── "+stageNum+" ──────────────────────────────────"), Colorize(Dim, "("+cmd.CommandName+")"))
+			fmt.Printf("  %s %s\n", Colorize(BoldCyan, "─── "+stageNum+" ───"), Colorize(Dim, "("+cmd.CommandName+")"))
 		}
 
-		renderSingleCommand(cmd, numCmds > 1)
+		renderSingleCommand(cmd)
 
 		if idx < numCmds-1 {
 			if cmd.PipedToNext {
-				fmt.Printf("       %s %s\n\n", Colorize(BoldYellow, "│"), Colorize(Dim, "pipes stdout into next command ──►"))
+				fmt.Printf("\n       %s %s\n\n", Colorize(BoldYellow, "│"), Colorize(Dim, "pipes stdout into next command"))
 			} else if cmd.ChainOp != "" {
-				fmt.Printf("       %s %s\n\n", Colorize(BoldYellow, "│"), Colorize(Dim, "then executes ("+cmd.ChainOp+") ──►"))
+				fmt.Printf("\n       %s %s\n\n", Colorize(BoldYellow, "│"), Colorize(Dim, "then runs next ("+cmd.ChainOp+")"))
 			}
 		}
 	}
 
-	// 3. Render Smart Tip / Better Alternative (if available)
-	if analysis.SmartTip != "" {
-		renderSmartTip(analysis.SmartTip)
-	}
-
 	fmt.Println()
 }
 
-func renderPipelineOverview(analysis *analyzer.PipelineAnalysis) {
+func renderPipelineHeader(analysis *analyzer.PipelineAnalysis) {
 	var stages []string
 	for _, c := range analysis.Commands {
 		stages = append(stages, Colorize(BoldWhite, c.CommandName))
 	}
-	pipelineFlow := strings.Join(stages, Colorize(BoldYellow, " ──► "))
-
-	fmt.Printf("  %s %s\n", Colorize(BoldMagenta, "Pipeline Overview:"), pipelineFlow)
-	if analysis.PipelineSummary != "" {
-		fmt.Printf("  %s %s\n", Colorize(Dim, "└─►"), Colorize(White, analysis.PipelineSummary))
-	}
-	fmt.Println()
+	pipelineFlow := strings.Join(stages, Colorize(Yellow, "  ⟶  "))
+	fmt.Printf("  %s %s\n\n", Colorize(BoldMagenta, "Pipeline:"), pipelineFlow)
 }
 
-func renderSingleCommand(cmd *analyzer.CommandAnalysis, isPipeline bool) {
-	indent := "  "
-	if isPipeline {
-		indent = "  │ "
-	}
-
-	// 1. Command Header (Command Name + Summary)
+func renderSingleCommand(cmd *analyzer.CommandAnalysis) {
+	// 1. Header (Command Name — Summary)
+	icon := getCommandIcon(cmd.CommandName)
 	cmdTitle := cmd.CommandName
 	if cmd.Subcommand != "" {
 		cmdTitle = cmd.CommandName + " " + cmd.Subcommand
 	}
 
-	fmt.Printf("%s%s %s %s\n\n",
-		indent,
+	fmt.Printf("  %s %s %s %s\n\n",
+		icon,
 		Colorize(BoldCyan, cmdTitle),
 		Colorize(Dim, "—"),
 		Colorize(White, cmd.CommandSummary),
 	)
 
-	// 2. What this command does (Human Summary)
-	if cmd.ActionSummary != "" {
-		fmt.Printf("%s%s\n", indent, Colorize(BoldGreen, "What this command does"))
-		fmt.Printf("%s  %s %s\n\n", indent, Colorize(BoldGreen, "└─►"), Colorize(White, cmd.ActionSummary))
-	}
-
-	// 3. Breakdown Section (Flags & Arguments Table)
+	// 2. Breakdown Section
 	if len(cmd.Items) > 0 {
-		fmt.Printf("%s%s\n", indent, Colorize(BoldWhite, "Breakdown"))
+		fmt.Printf("  %s\n", Colorize(BoldWhite, "Breakdown"))
 
+		// Find maximum label width for neat column alignment
 		maxLabelLen := 0
 		for _, item := range cmd.Items {
 			if len(item.Label) > maxLabelLen {
@@ -116,8 +96,7 @@ func renderSingleCommand(cmd *analyzer.CommandAnalysis, isPipeline bool) {
 				paddedLabel += strings.Repeat(" ", maxLabelLen-len(paddedLabel))
 			}
 
-			fmt.Printf("%s  %s %s %s\n",
-				indent,
+			fmt.Printf("    %s  %s %s\n",
 				Colorize(labelColor, paddedLabel),
 				Colorize(Dim, "→"),
 				Colorize(White, item.Description),
@@ -126,72 +105,84 @@ func renderSingleCommand(cmd *analyzer.CommandAnalysis, isPipeline bool) {
 		fmt.Println()
 	}
 
-	// 4. Redirections Section (if present)
+	// 3. What this command does (Action)
+	if cmd.ActionSummary != "" {
+		fmt.Printf("  %s\n", Colorize(BoldGreen, "What this command does"))
+		fmt.Printf("    %s\n\n", cmd.ActionSummary)
+	}
+
+	// 4. Redirections (if present)
 	if len(cmd.Redirects) > 0 {
-		fmt.Printf("%s%s\n", indent, Colorize(BoldYellow, "I/O Redirection"))
+		fmt.Printf("  %s\n", Colorize(BoldYellow, "Redirection"))
 		for _, r := range cmd.Redirects {
 			target := r.Target
 			if target == "" {
 				target = "file"
 			}
-			desc := "Redirects standard output to " + target + " (overwrites existing file)"
+			desc := "Redirects standard output to " + target + " (overwrites file)"
 			if r.Operator == ">>" {
-				desc = "Appends standard output to " + target
+				desc = "Appends output to " + target
 			} else if r.Operator == "<" {
-				desc = "Reads standard input from " + target
+				desc = "Reads input from " + target
 			} else if r.Operator == "2>&1" {
-				desc = "Merges error output (stderr) into standard output stream (stdout)"
+				desc = "Merges error stream (stderr) into standard output (stdout)"
 			}
-			fmt.Printf("%s  %s %s %s %s\n", indent, Colorize(BoldYellow, r.Operator), Colorize(Cyan, target), Colorize(Dim, "→"), Colorize(White, desc))
+			fmt.Printf("    %s %s  %s %s\n", Colorize(BoldYellow, r.Operator), Colorize(Cyan, target), Colorize(Dim, "→"), desc)
 		}
 		fmt.Println()
 	}
 
-	// 5. Safety & Danger Assessment (ONLY rendered if command is genuinely risky)
-	renderDangerAssessment(cmd.Danger, indent)
+	// 5. Risk / Danger Assessment
+	if cmd.Danger.Level != database.RiskSafe && cmd.Danger.Level != database.RiskLow {
+		riskTitle := "Risk / things to know"
+		riskColor := BoldYellow
+		if cmd.Danger.Level == database.RiskCritical || cmd.Danger.Level == database.RiskHigh {
+			riskColor = BoldRed
+		}
 
-	if isPipeline {
-		fmt.Printf("  %s\n", Colorize(BoldCyan, "└───────────────────────────────────────────────"))
+		fmt.Printf("  %s %s\n", Colorize(riskColor, cmd.Danger.Badge), Colorize(BoldWhite, "· "+riskTitle))
+		if cmd.Danger.Reason != "" {
+			fmt.Printf("    %s\n", cmd.Danger.Reason)
+		}
+		if cmd.Danger.Warning != "" {
+			fmt.Printf("    %s %s\n", Colorize(riskColor, "Warning:"), cmd.Danger.Warning)
+		}
 	}
 }
 
-func renderDangerAssessment(danger analyzer.DangerInfo, indent string) {
-	// ONLY render risk box if the command is genuinely risky (Medium, High, Critical, or has warning)
-	if danger.Level != database.RiskMedium && danger.Level != database.RiskHigh && danger.Level != database.RiskCritical && danger.Warning == "" {
-		return
-	}
-
-	riskColor := BoldYellow
-	if danger.Level == database.RiskHigh || danger.Level == database.RiskCritical {
-		riskColor = BoldRed
-	}
-
-	badgeText := danger.Badge
-	badgeText = strings.TrimSpace(badgeText)
-	badgeText = strings.TrimPrefix(badgeText, "🚨 ")
-	badgeText = strings.TrimPrefix(badgeText, "⚠️ ")
-	badgeText = strings.TrimPrefix(badgeText, "🟡 ")
-	badgeText = strings.TrimPrefix(badgeText, "🟢 ")
-
-	fmt.Printf("%s%s %s\n", indent, Colorize(riskColor, "[ "+badgeText+" ]"), Colorize(Dim, "· Risk Assessment"))
-	if danger.Reason != "" {
-		fmt.Printf("%s  %s %s\n", indent, Colorize(Dim, "└─►"), Colorize(White, danger.Reason))
-	}
-	if danger.Warning != "" {
-		fmt.Printf("%s  %s %s\n", indent, Colorize(riskColor, "WARNING:"), Colorize(BoldWhite, danger.Warning))
-	}
-	fmt.Println()
-}
-
-func renderSmartTip(tip string) {
-	tipText := strings.TrimSpace(tip)
-	tipText = strings.TrimPrefix(tipText, "💡 ")
-	tipText = strings.TrimPrefix(tipText, "⚠️ ")
-	tipText = strings.TrimPrefix(tipText, "🚨 ")
-	
-	if strings.HasPrefix(tipText, "Tip: ") || strings.HasPrefix(tipText, "Security Note: ") || strings.HasPrefix(tipText, "Critical Danger: ") {
-		fmt.Printf("  %s\n", Colorize(BoldYellow, tipText))
-	} else {
-		fmt.Printf("  %s %s\n", Colorize(BoldYellow, "Tip:"), Colorize(White, tipText))
+func getCommandIcon(name string) string {
+	switch name {
+	case "tar", "zip", "unzip", "gzip":
+		return "📦"
+	case "rm", "shred":
+		return "🗑️ "
+	case "cp", "mv":
+		return "📄"
+	case "ls", "tree":
+		return "📂"
+	case "mkdir":
+		return "📁"
+	case "find", "locate", "grep", "rg":
+		return "🔍"
+	case "curl", "wget", "ssh", "scp", "ping":
+		return "🌐"
+	case "git":
+		return "🌿"
+	case "docker":
+		return "🐳"
+	case "kill", "pkill", "killall":
+		return "⚡"
+	case "ps", "top", "htop":
+		return "📊"
+	case "chmod", "chown", "sudo":
+		return "🔒"
+	case "systemctl", "service", "journalctl":
+		return "⚙️ "
+	case "dd", "mkfs", "fdisk":
+		return "💾"
+	case "cat", "head", "tail", "less", "awk", "sed":
+		return "📝"
+	default:
+		return "💻"
 	}
 }

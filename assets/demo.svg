@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 480" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 560" width="100%" height="100%">
   <defs>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&amp;display=swap');
@@ -13,17 +13,17 @@
       .cmd { fill: #f0883e; font-weight: 500; }
       .white { fill: #c9d1d9; }
       .bold-white { fill: #f0f6fc; font-weight: 700; }
-      .bold-green { fill: #3fb950; font-weight: 700; }
-      .bold-cyan { fill: #39c5bb; font-weight: 700; }
       .cyan { fill: #39c5bb; font-weight: 600; }
       .yellow { fill: #e3b341; font-weight: 600; }
       .green { fill: #56d364; font-weight: 600; }
       .dim { fill: #6e7681; }
+      .red-badge { fill: #f85149; font-weight: 700; }
+      .box { fill: #21262d; stroke: #30363d; stroke-width: 1; rx: 6px; }
     </style>
   </defs>
 
   <!-- Terminal Window Background -->
-  <rect width="850" height="480" class="term-bg" filter="drop-shadow(0 20px 30px rgba(0,0,0,0.5))"/>
+  <rect width="850" height="560" class="term-bg" filter="drop-shadow(0 20px 30px rgba(0,0,0,0.5))"/>
 
   <!-- Terminal Header Bar -->
   <path d="M 0 12 Q 0 0 12 0 L 838 0 Q 850 0 850 12 L 850 38 L 0 38 Z" class="term-header"/>
@@ -34,7 +34,7 @@
   <circle cx="56" cy="19" r="6" class="btn-green"/>
 
   <!-- Title -->
-  <text x="425" y="24" text-anchor="middle" class="title">explain v1.1.0 — user@linux:~</text>
+  <text x="425" y="24" text-anchor="middle" class="title">explain — user@linux:~</text>
 
   <!-- Terminal Content -->
   <g transform="translate(30, 75)" class="txt">
@@ -43,32 +43,52 @@
       <tspan class="prompt">elsawy@dev</tspan><tspan class="dim">:</tspan><tspan class="cyan">~</tspan><tspan class="dim">$</tspan> <tspan class="cmd">explain tar -xzf backup.tar.gz</tspan>
     </text>
 
-    <!-- Command Header -->
-    <text x="15" y="35">
-      <tspan class="bold-cyan">tar</tspan> <tspan class="dim">—</tspan> <tspan class="white">Creates, extracts, and lists archive files (.tar, .tar.gz, .tgz, .tar.xz)</tspan>
+    <!-- Output 1 -->
+    <text x="15" y="32">
+      <tspan font-size="16">📦</tspan> <tspan class="cyan">tar</tspan> <tspan class="dim">—</tspan> <tspan class="white">Creates, extracts, and lists archive files (.tar, .tar.gz)</tspan>
     </text>
 
-    <!-- What this command does -->
-    <text x="15" y="75" class="bold-green">What this command does</text>
-    <text x="35" y="98">
-      <tspan class="bold-green">└─►</tspan> <tspan class="white">Extracts files from gzip archive (.tar.gz) 'backup.tar.gz' into current directory.</tspan>
+    <text x="15" y="65" class="bold-white">Breakdown</text>
+    
+    <text x="30" y="92">
+      <tspan class="yellow">-x, --extract</tspan> <tspan class="dim"> → </tspan> <tspan class="white">Extract files from an archive</tspan>
+    </text>
+    <text x="30" y="116">
+      <tspan class="yellow">-z, --gzip   </tspan> <tspan class="dim"> → </tspan> <tspan class="white">Filter archive through gzip (.tar.gz / .tgz)</tspan>
+    </text>
+    <text x="30" y="140">
+      <tspan class="yellow">-f, --file   </tspan> <tspan class="dim"> → </tspan> <tspan class="white">Specify archive filename </tspan><tspan class="cyan">(Target: backup.tar.gz)</tspan>
     </text>
 
-    <!-- Breakdown Section -->
-    <text x="15" y="138" class="bold-white">Breakdown</text>
-    <text x="35" y="162">
-      <tspan class="yellow">-x, --extract </tspan> <tspan class="dim">→ </tspan><tspan class="white">Extract files from an archive</tspan>
-    </text>
-    <text x="35" y="186">
-      <tspan class="yellow">-z, --gzip    </tspan> <tspan class="dim">→ </tspan><tspan class="white">Filter archive through gzip compression/decompression (.tar.gz / .tgz)</tspan>
-    </text>
-    <text x="35" y="210">
-      <tspan class="yellow">-f, --file    </tspan> <tspan class="dim">→ </tspan><tspan class="white">Specify the archive filename to read or write (backup.tar.gz)</tspan>
+    <text x="15" y="176" class="green">What this command does</text>
+    <text x="30" y="200" class="white">
+      Extracts files from gzip-compressed archive (.tar.gz) <tspan class="cyan">'backup.tar.gz'</tspan> into current directory.
     </text>
 
-    <!-- Next Prompt Line -->
-    <text x="0" y="260">
-      <tspan class="prompt">elsawy@dev</tspan><tspan class="dim">:</tspan><tspan class="cyan">~</tspan><tspan class="dim">$</tspan> <tspan class="cmd">_</tspan>
+    <text x="15" y="235">
+      <tspan class="yellow">🟡 MODERATE</tspan> <tspan class="dim">·</tspan> <tspan class="bold-white">Risk / things to know</tspan>
+    </text>
+    <text x="30" y="258" class="dim">
+      Modifies files in current directory if filenames already exist.
+    </text>
+
+    <!-- Prompt Line 2 (cd command) -->
+    <text x="0" y="310">
+      <tspan class="prompt">elsawy@dev</tspan><tspan class="dim">:</tspan><tspan class="cyan">~</tspan><tspan class="dim">$</tspan> <tspan class="cmd">explain cd /home/</tspan>
+    </text>
+
+    <text x="15" y="342">
+      <tspan font-size="16">💻</tspan> <tspan class="cyan">cd</tspan> <tspan class="dim">—</tspan> <tspan class="white">Changes the current working directory in the shell</tspan>
+    </text>
+
+    <text x="15" y="375" class="bold-white">Breakdown</text>
+    <text x="30" y="402">
+      <tspan class="cyan">/home/       </tspan> <tspan class="dim"> → </tspan> <tspan class="white">Target destination directory to switch to</tspan>
+    </text>
+
+    <text x="15" y="438" class="green">What this command does</text>
+    <text x="30" y="462" class="white">
+      Changes the current working directory to <tspan class="cyan">'/home/'</tspan>.
     </text>
   </g>
 </svg>

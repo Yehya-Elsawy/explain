@@ -38,11 +38,9 @@ type CommandAnalysis struct {
 
 // PipelineAnalysis contains the analysis of all piped or chained commands.
 type PipelineAnalysis struct {
-	RawInput        string
-	Commands        []*CommandAnalysis
-	MaxRisk         database.RiskLevel
-	PipelineSummary string
-	SmartTip        string
+	RawInput string
+	Commands []*CommandAnalysis
+	MaxRisk  database.RiskLevel
 }
 
 // AnalyzePipeline analyzes a full parsed AST pipeline.
@@ -62,8 +60,6 @@ func AnalyzePipeline(pipe *ast.Pipeline) *PipelineAnalysis {
 	}
 
 	CheckPipelineDangers(result)
-	result.PipelineSummary = SynthesizePipelineSummary(result)
-	result.SmartTip = SuggestAlternative(result)
 
 	return result
 }
