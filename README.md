@@ -14,7 +14,7 @@
 
 <br/>
 
-<img src="assets/demo.svg" alt="explain demo preview" width="850"/>
+<img src="assets/usage" alt="explain demo preview" width="850"/>
 
 </div>
 
@@ -38,9 +38,9 @@
 
 | Architecture | Linux | macOS | Windows (WSL) |
 |---|:---:|:---:|:---:|
-| **x86_64 / amd64** (Intel & AMD) | ✅ Supported | ✅ Supported (Intel) | ✅ Supported |
-| **arm64 / aarch64** (Apple Silicon, Raspberry Pi, AWS Graviton) | ✅ Supported | ✅ Supported (M1/M2/M3/M4) | ✅ Supported |
-| **i386 / 32-bit** | ✅ Supported | — | — |
+| **x86_64 / amd64** (Intel & AMD) |  Supported |  Supported (Intel) |  Supported |
+| **arm64 / aarch64** (Apple Silicon, Raspberry Pi, AWS Graviton) |  Supported |  Supported (M1/M2/M3/M4) |  Supported |
+| **i386 / 32-bit** |  Supported | — | — |
 
 </div>
 
@@ -118,7 +118,7 @@ curl -fsSL https://raw.githubusercontent.com/Yehya-Elsawy/explain/main/scripts/u
 
 ---
 
-## 📖 CLI Usage
+## CLI Usage
 
 ```text
 USAGE:
