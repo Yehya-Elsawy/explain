@@ -220,7 +220,12 @@ func main() {
 
 	pipeline, err := ast.Parse(rawInput)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error parsing command: %v\n", err)
+		if strings.TrimSpace(rawInput) == "" {
+			fmt.Fprintf(os.Stderr, "Error parsing command: %v\n", err)
+			printHelp()
+		} else {
+			fmt.Fprintf(os.Stderr, "Error parsing command: %v\n", err)
+		}
 		os.Exit(1)
 	}
 
