@@ -168,11 +168,12 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 			}
 
 			flagDef, found := findFlagDef(cmdDef, analysis.Subcommand, flagKey)
-			if !found && flagVal == "" && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-				if flagDef.TakesValue {
-					flagVal = args[i+1]
-					i++
-				}
+			if !found {
+				flagDef = lookupDynamicFlagDef(cmd.Name, "--"+flagKey)
+			}
+			if flagVal == "" && flagDef.TakesValue && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+				flagVal = args[i+1]
+				i++
 			}
 
 			label := "--" + flagKey
@@ -181,13 +182,7 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 			}
 			desc := flagDef.Description
 			if desc == "" {
-				desc = manparser.ExtractFlagDescription(cmd.Name, "--"+flagKey)
-				if desc == "" {
-					desc = manparser.ExtractHelpFlagDescription(cmd.Name, "--"+flagKey)
-				}
-				if desc == "" {
-					desc = "Option flag --" + flagKey
-				}
+				desc = "Option flag --" + flagKey
 			}
 
 			if flagVal != "" {
@@ -230,10 +225,13 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 
 			// Single named options with single dash (e.g. find -name, -type, -mtime, -maxdepth)
 			if cmd.Name == "find" && len(cluster) > 1 {
-				flagDef, _ := findFlagDef(cmdDef, "", cluster)
+				flagDef, found := findFlagDef(cmdDef, "", cluster)
+				if !found {
+					flagDef = lookupDynamicFlagDef(cmd.Name, arg)
+				}
 				desc := flagDef.Description
 				if desc == "" {
-					desc = manparser.ExtractFlagDescription(cmd.Name, arg)
+					desc = "Option flag " + arg
 				}
 				if flagDef.TakesValue && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
 					desc += " (" + args[i+1] + ")"
@@ -254,7 +252,10 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 			runes := []rune(cluster)
 			for rIdx, r := range runes {
 				charStr := string(r)
-				flagDef, _ := findFlagDef(cmdDef, analysis.Subcommand, charStr)
+				flagDef, found := findFlagDef(cmdDef, analysis.Subcommand, charStr)
+				if !found {
+					flagDef = lookupDynamicFlagDef(cmd.Name, "-"+charStr)
+				}
 				label := "-" + charStr
 				if flagDef.Long != "" {
 					label = flagDef.Short + ", " + flagDef.Long
@@ -264,20 +265,22 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 
 				desc := flagDef.Description
 				if desc == "" {
-					desc = manparser.ExtractFlagDescription(cmd.Name, "-"+charStr)
-					if desc == "" {
-						desc = manparser.ExtractHelpFlagDescription(cmd.Name, "-"+charStr)
-					}
-					if desc == "" {
-						desc = "Option flag -" + charStr
-					}
+					desc = "Option flag -" + charStr
 				}
 
-				// If this flag takes a value and it's the last in the cluster
-				if flagDef.TakesValue && rIdx == len(runes)-1 && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-					val := args[i+1]
-					desc += " (" + val + ")"
-					i++ // consume value
+				consumedClusterRemainder := false
+				if flagDef.TakesValue {
+					val := ""
+					if rIdx < len(runes)-1 {
+						val = string(runes[rIdx+1:])
+						consumedClusterRemainder = true
+					} else if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+						val = args[i+1]
+						i++ // consume the following value
+					}
+					if val != "" {
+						desc += " (" + val + ")"
+					}
 				}
 
 				analysis.Items = append(analysis.Items, ExplainedItem{
@@ -287,6 +290,9 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 					IsFlag:      true,
 					Risk:        flagDef.Risk,
 				})
+				if consumedClusterRemainder {
+					break
+				}
 			}
 			i++
 			continue
@@ -361,6 +367,18 @@ func findFlagDef(cmdDef database.CommandDef, subcmd, key string) (database.FlagD
 		}
 	}
 	return database.FlagDef{}, false
+}
+
+func lookupDynamicFlagDef(cmdName, flag string) database.FlagDef {
+	info := manparser.ExtractFlagInfo(cmdName, flag)
+	if info.Description == "" && !info.TakesValue {
+		info = manparser.ExtractHelpFlagInfo(cmdName, flag)
+	}
+	return database.FlagDef{
+		Description: info.Description,
+		TakesValue:  info.TakesValue,
+		ValueName:   info.ValueName,
+	}
 }
 
 func describePositionalArg(cmdName, subcmd, arg string, pos int) string {

@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Yehya-Elsawy/explain/pkg/analyzer"
@@ -78,5 +79,28 @@ func TestAnalyzeDockerRun(t *testing.T) {
 	}
 	if cmd.Danger.Level != database.RiskMedium {
 		t.Errorf("expected RiskMedium, got %v", cmd.Danger.Level)
+	}
+}
+
+func TestLongFlagConsumesSeparateValue(t *testing.T) {
+	pipe, _ := ast.Parse("curl --output download.bin https://example.com/archive")
+	analysis := analyzer.AnalyzePipeline(pipe)
+	cmd := analysis.Commands[0]
+
+	if len(cmd.PositionalArgs) != 1 || cmd.PositionalArgs[0] != "https://example.com/archive" {
+		t.Fatalf("expected only URL as positional argument, got %v", cmd.PositionalArgs)
+	}
+
+	foundOutput := false
+	for _, item := range cmd.Items {
+		if item.Token == "--output" {
+			foundOutput = true
+			if !strings.Contains(item.Description, "(download.bin)") {
+				t.Errorf("expected output value in description, got %q", item.Description)
+			}
+		}
+	}
+	if !foundOutput {
+		t.Error("expected --output flag in breakdown")
 	}
 }
