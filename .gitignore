@@ -28,3 +28,7 @@ coverage.html
 vendor/
 go.work
 go.work.sum
+
+# Build binaries
+explain
+explain-test
