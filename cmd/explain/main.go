@@ -16,7 +16,7 @@ import (
 	"github.com/Yehya-Elsawy/explain/pkg/updater"
 )
 
-var Version = "v1.1.0"
+var Version = "v1.1.1"
 
 func init() {
 	if info, ok := debug.ReadBuildInfo(); ok {
