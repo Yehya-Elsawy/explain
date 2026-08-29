@@ -61,3 +61,18 @@ func TestParseRedirectsAndSudo(t *testing.T) {
 		t.Errorf("expected 2 redirects, got %d", len(cmd.Redirects))
 	}
 }
+
+func TestParseEmptyCommand(t *testing.T) {
+	tests := []string{
+		"",
+		"   ",
+		"\t\n",
+	}
+
+	for _, input := range tests {
+		_, err := ast.Parse(input)
+		if err == nil {
+			t.Errorf("expected error for empty input %q", input)
+		}
+	}
+}

@@ -17,9 +17,13 @@ func TestStripOverstrike(t *testing.T) {
 
 func TestDynamicManExtraction(t *testing.T) {
 	summary := manparser.ExtractCommandSummary("ls")
+	expected := "list directory contents"
+
 	if summary == "" {
-		t.Log("Note: man ls not available or non-standard in test container, skipping assertion")
-	} else {
-		t.Logf("Extracted ls summary: %s", summary)
+		t.Skip("Note: man ls not available or non-standard in test container, skipping assertion.")
+	}
+
+	if summary != expected {
+		t.Errorf("Expected %s, got %s", expected, summary)
 	}
 }

@@ -5,6 +5,12 @@ import (
 	"unicode"
 )
 
+type parseError string
+
+func (e parseError) Error() string {
+	return string(e)
+}
+
 // Lex tokenizes a shell command string into a slice of Token.
 func Lex(input string) ([]Token, error) {
 	var tokens []Token
@@ -172,7 +178,7 @@ func Parse(input string) (*Pipeline, error) {
 	}
 
 	if len(tokens) == 0 {
-		return pipeline, nil
+		return nil, parseError("No command provided to explain.")
 	}
 
 	currCmd := &SingleCommand{}
