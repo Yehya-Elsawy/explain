@@ -20,8 +20,11 @@ import (
 var Version = "v2.0.0"
 
 func init() {
+	if Version != "" && Version != "(devel)" {
+		return
+	}
 	if info, ok := debug.ReadBuildInfo(); ok {
-		if info.Main.Version != "" && info.Main.Version != "(devel)" {
+		if info.Main.Version != "" && info.Main.Version != "(devel)" && !strings.HasPrefix(info.Main.Version, "v0.0.0") {
 			Version = info.Main.Version
 		}
 	}
