@@ -55,6 +55,13 @@ _explain_completions() {
             ;;
         hook|completion)
             if [[ $cword -eq 2 ]]; then
+                if [[ "$cmd1" == "completion" ]]; then
+                    COMPREPLY=($(compgen -W "install $shells" -- "$cur"))
+                else
+                    COMPREPLY=($(compgen -W "$shells" -- "$cur"))
+                fi
+                return 0
+            elif [[ $cword -eq 3 && "$cmd1" == "completion" && "${COMP_WORDS[2]}" == "install" ]]; then
                 COMPREPLY=($(compgen -W "$shells" -- "$cur"))
                 return 0
             fi
@@ -112,7 +119,18 @@ _explain() {
                         _describe -t shells 'target shell' shells
                     fi
                     ;;
-                hook|completion)
+                completion)
+                    if (( CURRENT == 2 )); then
+                        local -a comp_opts
+                        comp_opts=('install:Install completions to shell config' 'bash:Bash shell' 'zsh:Zsh shell' 'fish:Fish shell')
+                        _describe -t comp_opts 'completion options' comp_opts
+                    elif (( CURRENT == 3 && ${line[2]} == "install" )); then
+                        local -a shells
+                        shells=('bash:Bash shell' 'zsh:Zsh shell' 'fish:Fish shell')
+                        _describe -t shells 'target shell' shells
+                    fi
+                    ;;
+                hook)
                     if (( CURRENT == 2 )); then
                         local -a shells
                         shells=('bash:Bash shell' 'zsh:Zsh shell' 'fish:Fish shell')
@@ -150,7 +168,12 @@ complete -c explain -n "__fish_seen_subcommand_from guard; and not __fish_seen_s
 complete -c explain -n "__fish_seen_subcommand_from guard; and not __fish_seen_subcommand_from enable disable status" -a "disable" -d "Disable terminal protection"
 complete -c explain -n "__fish_seen_subcommand_from guard; and not __fish_seen_subcommand_from enable disable status" -a "status" -d "Check terminal protection status"
 
+# Completion subcommands
+complete -c explain -n "__fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from install" -a "install" -d "Install shell completion script"
+complete -c explain -n "__fish_seen_subcommand_from completion; and __fish_seen_subcommand_from install" -a "bash zsh fish" -d "Target shell"
+
 # Target shells for hook, completion, and guard
-complete -c explain -n "__fish_seen_subcommand_from hook completion" -a "bash zsh fish" -d "Target shell"
+complete -c explain -n "__fish_seen_subcommand_from hook" -a "bash zsh fish" -d "Target shell"
+complete -c explain -n "__fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from install" -a "bash zsh fish" -d "Target shell"
 complete -c explain -n "__fish_seen_subcommand_from guard; and __fish_seen_subcommand_from enable disable status" -a "bash zsh fish" -d "Target shell"
 `

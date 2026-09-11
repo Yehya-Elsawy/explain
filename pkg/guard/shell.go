@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Yehya-Elsawy/explain/pkg/completion"
 	"github.com/Yehya-Elsawy/explain/pkg/ui"
 )
 
@@ -172,6 +173,9 @@ func Enable(requested ...string) error {
 	fmt.Println()
 	fmt.Printf("  %s %s\n", ui.Colorize(ui.BoldYellow, "[>]"), ui.Colorize(ui.White, "To activate protection in your current terminal session, run:"))
 	fmt.Printf("      %s\n\n", ui.Colorize(ui.BoldCyan, "source "+rcPath))
+
+	// Ensure shell completions are installed
+	_, _ = completion.InstallAll()
 
 	return nil
 }

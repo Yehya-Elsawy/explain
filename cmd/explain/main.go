@@ -59,6 +59,7 @@ func printHelp() {
   explain guard status       Check current protection status
   explain hook [shell]       Output shell hook script (bash, zsh, fish)
   explain completion [shell] Output shell autocompletion script (bash, zsh, fish)
+  explain completion install Install shell autocompletions into user config
   explain update             Check and upgrade explain to the latest release from GitHub
   explain uninstall          Remove explain CLI from your system
   -i, --interactive     Launch interactive mode (paste complex pipelines without quotes)
@@ -121,6 +122,7 @@ func runInteractive() {
 }
 
 func main() {
+	completion.AutoEnsure()
 	args := os.Args[1:]
 
 	// Check if data is piped via stdin (e.g. echo "ps aux | grep nginx" | explain)
@@ -200,6 +202,36 @@ func main() {
 	}
 
 	if args[0] == "completion" {
+		if len(args) > 1 && (args[1] == "install" || args[1] == "--install") {
+			targetShell := ""
+			if len(args) > 2 {
+				targetShell = args[2]
+			}
+			if targetShell != "" {
+				path, err := completion.Install(targetShell)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Error installing %s completion: %v\n", targetShell, err)
+					os.Exit(1)
+				}
+				ui.InitColors(false)
+				fmt.Printf("\n  %s %s completion installed to %s\n\n", ui.Colorize(ui.BoldGreen, "[✓]"), targetShell, path)
+				return
+			}
+
+			paths, err := completion.InstallAll()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error installing completions: %v\n", err)
+				os.Exit(1)
+			}
+			ui.InitColors(false)
+			fmt.Printf("\n  %s Shell autocompletions installed successfully:\n", ui.Colorize(ui.BoldGreen, "[✓]"))
+			for _, p := range paths {
+				fmt.Printf("      - %s\n", ui.Colorize(ui.BoldWhite, p))
+			}
+			fmt.Println()
+			return
+		}
+
 		targetShell := ""
 		if len(args) > 1 {
 			targetShell = args[1]
@@ -393,6 +425,8 @@ func runUninstall() {
 			}
 		}
 	}
+
+	completion.UninstallCompletions()
 
 	if removedAny {
 		fmt.Println(ui.Colorize(ui.BoldGreen, "\n  Successfully uninstalled explain CLI."))

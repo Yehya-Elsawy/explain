@@ -98,6 +98,11 @@ fi
 
 echo -e "${GREEN}✓ Successfully installed explain to $INSTALL_DIR/explain${NC}"
 
+# Automatically install shell autocompletions
+if [ -x "$INSTALL_DIR/explain" ]; then
+    "$INSTALL_DIR/explain" completion install >/dev/null 2>&1 || true
+fi
+
 # Ensure PATH includes install directory
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
     echo -e "${YELLOW}Note: $INSTALL_DIR is not in your current PATH.${NC}"

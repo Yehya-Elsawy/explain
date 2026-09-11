@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -60,3 +61,36 @@ func TestHookIncludesCompletion(t *testing.T) {
 		}
 	}
 }
+
+func TestCompletionInstallAndPaths(t *testing.T) {
+	tempHome := t.TempDir()
+	t.Setenv("HOME", tempHome)
+
+	for _, sh := range []string{"fish", "bash", "zsh"} {
+		p, err := completion.GetCompletionPath(sh)
+		if err != nil {
+			t.Fatalf("unexpected error for %s path: %v", sh, err)
+		}
+		if !strings.HasPrefix(p, tempHome) {
+			t.Errorf("expected path to be inside tempHome, got %s", p)
+		}
+
+		installedPath, err := completion.Install(sh)
+		if err != nil {
+			t.Fatalf("failed to install %s completion: %v", sh, err)
+		}
+		if installedPath != p {
+			t.Errorf("expected %s, got %s", p, installedPath)
+		}
+	}
+
+	// Test uninstall
+	completion.UninstallCompletions()
+	for _, sh := range []string{"fish", "bash", "zsh"} {
+		p, _ := completion.GetCompletionPath(sh)
+		if _, err := os.Stat(p); !os.IsNotExist(err) {
+			t.Errorf("expected completion file %s to be deleted after uninstall", p)
+		}
+	}
+}
+
