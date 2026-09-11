@@ -12,11 +12,12 @@ import (
 
 	"github.com/Yehya-Elsawy/explain/pkg/analyzer"
 	"github.com/Yehya-Elsawy/explain/pkg/ast"
+	"github.com/Yehya-Elsawy/explain/pkg/guard"
 	"github.com/Yehya-Elsawy/explain/pkg/ui"
 	"github.com/Yehya-Elsawy/explain/pkg/updater"
 )
 
-var Version = "v1.2.0"
+var Version = "v2.0.0"
 
 func init() {
 	if info, ok := debug.ReadBuildInfo(); ok {
@@ -35,6 +36,7 @@ func printHelp() {
   explain <command with arguments>
   explain "<piped | or compound command>"
   explain !! (explain the last executed command)
+  explain guard [enable|disable|status] (active shell safety shield)
   explain update (update explain to the latest version)
   explain -i (interactive mode - no quotes needed)
 
@@ -45,16 +47,21 @@ func printHelp() {
   explain "ps aux | grep nginx | awk '{print $2}' | xargs kill -9"
   explain "curl -fsSL https://get.docker.com | sh"
   explain "rm -rf /tmp/cache"
+  explain guard enable
 
 %s
-  explain update    Check and upgrade explain to the latest release from GitHub
-  explain uninstall Remove explain CLI from your system
-  -i, --interactive Launch interactive mode (paste complex pipelines without quotes)
-  -r, --run         Ask to run the command after explaining it
-  --json            Output structured analysis in JSON format
-  --no-color        Disable colored output
-  -v, --version     Show current explain version
-  -h, --help        Show this help message
+  explain guard enable  Enable active terminal protection against destructive commands
+  explain guard disable Disable active terminal protection
+  explain guard status  Check current protection status
+  explain hook [shell]  Output shell hook script (bash, zsh, fish)
+  explain update        Check and upgrade explain to the latest release from GitHub
+  explain uninstall     Remove explain CLI from your system
+  -i, --interactive     Launch interactive mode (paste complex pipelines without quotes)
+  -r, --run             Ask to run the command after explaining it
+  --json                Output structured analysis in JSON format
+  --no-color            Disable colored output
+  -v, --version         Show current explain version
+  -h, --help            Show this help message
 
 %s
   Why quotes for pipes? The shell intercepts '|', '>', '&&' before passing them to programs.
@@ -133,6 +140,54 @@ func main() {
 	if len(args) == 0 {
 		printHelp()
 		os.Exit(0)
+	}
+
+	if args[0] == "guard" {
+		if len(args) == 1 || args[1] == "status" {
+			if err := guard.Status(); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				os.Exit(1)
+			}
+			return
+		}
+		switch args[1] {
+		case "enable", "on", "start":
+			if err := guard.Enable(); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				os.Exit(1)
+			}
+			return
+		case "disable", "off", "stop":
+			if err := guard.Disable(); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				os.Exit(1)
+			}
+			return
+		case "check":
+			cmdToCheck := strings.Join(args[2:], " ")
+			code := guard.Check(cmdToCheck)
+			os.Exit(code)
+		default:
+			fmt.Fprintf(os.Stderr, "Unknown guard command: %s. Use 'enable', 'disable', or 'status'.\n", args[1])
+			os.Exit(1)
+		}
+	}
+
+	if args[0] == "hook" {
+		targetShell := ""
+		if len(args) > 1 {
+			targetShell = args[1]
+		} else {
+			sh, _, _ := guard.DetectShell()
+			targetShell = sh
+		}
+		script, err := guard.GenerateHook(targetShell)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Print(script)
+		return
 	}
 
 	disableColor := false

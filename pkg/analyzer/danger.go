@@ -105,7 +105,25 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 
 	// 3. Permissive Chmod (chmod 777)
 	if name == "chmod" {
-		if strings.Contains(argsJoined, "777") || strings.Contains(argsJoined, "a+rwx") {
+		isRecursive := strings.Contains(argsJoined, "-R") || strings.Contains(argsJoined, "--recursive")
+		is777 := strings.Contains(argsJoined, "777") || strings.Contains(argsJoined, "a+rwx")
+		hasRoot := false
+		for _, arg := range cmd.Args {
+			if arg == "/" || arg == "/*" || strings.HasPrefix(arg, "/etc") || strings.HasPrefix(arg, "/boot") {
+				hasRoot = true
+			}
+		}
+
+		if isRecursive && is777 && hasRoot {
+			return DangerInfo{
+				Level:   database.RiskCritical,
+				Badge:   "CRITICAL SYSTEM BREAK",
+				Reason:  "Recursively grants 777 permissions across root/system directories.",
+				Warning: "DO NOT RUN THIS! This breaks sudo, ssh, and system security permissions irreversibly.",
+			}
+		}
+
+		if is777 {
 			return DangerInfo{
 				Level:   database.RiskHigh,
 				Badge:   "SECURITY RISK",

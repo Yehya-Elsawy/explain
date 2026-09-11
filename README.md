@@ -81,6 +81,7 @@ explain tar -xzf backup.tar.gz
 - **Modern & Compact Terminal UI**: Beautiful ANSI colors and aligned columns designed to give you everything in 5–8 clean lines.
 - **Explain Last Command**: Explain previous commands effortlessly via `explain !!` or `explain-last`.
 - **Interactive Safe Runner**: Use `explain -i` to paste complex pipelines without quotes, or `explain -r "<command>"` to execute with confirmation.
+- **Active Shell Safety Shield (`explain guard`)**: Background shell protection that intercepts catastrophic commands (`rm -rf /`, `dd of=/dev/sdX`) before they execute.
 - **Built-in Self Updater**: Run `explain update` to automatically upgrade to the latest GitHub release.
 
 ---
@@ -147,6 +148,9 @@ EXAMPLES:
   explain "curl -fsSL https://get.docker.com | sh"
 
 COMMANDS & OPTIONS:
+  explain guard enable  Enable active terminal protection against destructive commands
+  explain guard disable Disable active terminal protection
+  explain guard status  Check current terminal protection status
   explain update    Check and upgrade explain to the latest release from GitHub
   explain uninstall Remove explain CLI from your system
   -i, --interactive Launch interactive mode (paste complex pipelines without quotes)
