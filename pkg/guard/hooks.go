@@ -3,17 +3,19 @@ package guard
 import (
 	"fmt"
 	"strings"
+
+	"github.com/Yehya-Elsawy/explain/pkg/completion"
 )
 
 // GenerateHook generates the shell integration script for the specified shell.
 func GenerateHook(shell string) (string, error) {
 	switch strings.ToLower(strings.TrimSpace(shell)) {
 	case "bash":
-		return bashHookScript, nil
+		return bashHookScript + "\n" + completion.BashScript, nil
 	case "zsh":
-		return zshHookScript, nil
+		return zshHookScript + "\n" + completion.ZshScript, nil
 	case "fish":
-		return fishHookScript, nil
+		return fishHookScript + "\n" + completion.FishScript, nil
 	default:
 		return "", fmt.Errorf("unsupported shell '%s'. Supported shells: bash, zsh, fish", shell)
 	}
@@ -24,6 +26,10 @@ const bashHookScript = `# explain guard - Bash Integration
 # Only forwards potentially dangerous operations to explain guard check.
 
 _explain_guard_bash() {
+    # Ignore during tab completion, prompt rendering, or internal functions
+    [[ -n "$COMP_LINE" ]] && return 0
+    [[ ${#FUNCNAME[@]} -gt 1 ]] && return 0
+
     local cmd="$BASH_COMMAND"
     [[ -z "$cmd" ]] && return 0
 

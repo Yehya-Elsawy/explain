@@ -12,6 +12,7 @@ import (
 
 	"github.com/Yehya-Elsawy/explain/pkg/analyzer"
 	"github.com/Yehya-Elsawy/explain/pkg/ast"
+	"github.com/Yehya-Elsawy/explain/pkg/completion"
 	"github.com/Yehya-Elsawy/explain/pkg/guard"
 	"github.com/Yehya-Elsawy/explain/pkg/ui"
 	"github.com/Yehya-Elsawy/explain/pkg/updater"
@@ -53,12 +54,13 @@ func printHelp() {
   explain guard enable
 
 %s
-  explain guard enable  Enable active terminal protection against destructive commands
-  explain guard disable Disable active terminal protection
-  explain guard status  Check current protection status
-  explain hook [shell]  Output shell hook script (bash, zsh, fish)
-  explain update        Check and upgrade explain to the latest release from GitHub
-  explain uninstall     Remove explain CLI from your system
+  explain guard enable       Enable active terminal protection against destructive commands
+  explain guard disable      Disable active terminal protection
+  explain guard status       Check current protection status
+  explain hook [shell]       Output shell hook script (bash, zsh, fish)
+  explain completion [shell] Output shell autocompletion script (bash, zsh, fish)
+  explain update             Check and upgrade explain to the latest release from GitHub
+  explain uninstall          Remove explain CLI from your system
   -i, --interactive     Launch interactive mode (paste complex pipelines without quotes)
   -r, --run             Ask to run the command after explaining it
   --json                Output structured analysis in JSON format
@@ -189,6 +191,23 @@ func main() {
 			targetShell = sh
 		}
 		script, err := guard.GenerateHook(targetShell)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Print(script)
+		return
+	}
+
+	if args[0] == "completion" {
+		targetShell := ""
+		if len(args) > 1 {
+			targetShell = args[1]
+		} else {
+			sh, _, _ := guard.DetectShell()
+			targetShell = sh
+		}
+		script, err := completion.Generate(targetShell)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
