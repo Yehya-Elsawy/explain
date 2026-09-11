@@ -3,8 +3,10 @@ package guard
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/Yehya-Elsawy/explain/pkg/ui"
@@ -15,29 +17,93 @@ const (
 	MarkerEnd   = "# <<< explain guard <<<"
 )
 
-// DetectShell identifies the current user's shell and determines the corresponding config file.
-func DetectShell() (shellName string, rcPath string, err error) {
-	rawShell := os.Getenv("SHELL")
-	if rawShell == "" {
-		rawShell = "/bin/bash"
+// detectRunningShell inspects the process hierarchy to find the actual shell currently running.
+func detectRunningShell() string {
+	pid := os.Getppid()
+	for i := 0; i < 6 && pid > 1; i++ {
+		// Linux: read /proc/<pid>/comm
+		commBytes, err := os.ReadFile(fmt.Sprintf("/proc/%d/comm", pid))
+		if err == nil {
+			comm := strings.ToLower(strings.TrimSpace(string(commBytes)))
+			switch {
+			case strings.Contains(comm, "bash"):
+				return "bash"
+			case strings.Contains(comm, "zsh"):
+				return "zsh"
+			case strings.Contains(comm, "fish"):
+				return "fish"
+			}
+		}
+
+		// macOS fallback
+		if runtime.GOOS == "darwin" {
+			out, err := exec.Command("ps", "-p", fmt.Sprintf("%d", pid), "-o", "comm=").Output()
+			if err == nil {
+				comm := strings.ToLower(strings.TrimSpace(string(out)))
+				switch {
+				case strings.Contains(comm, "bash"):
+					return "bash"
+				case strings.Contains(comm, "zsh"):
+					return "zsh"
+				case strings.Contains(comm, "fish"):
+					return "fish"
+				}
+			}
+		}
+
+		// Read parent PID from /proc/<pid>/stat
+		statBytes, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
+		if err != nil {
+			break
+		}
+		fields := strings.Fields(string(statBytes))
+		if len(fields) < 4 {
+			break
+		}
+		parentPid, err := strconv.Atoi(fields[3])
+		if err != nil || parentPid <= 1 || parentPid == pid {
+			break
+		}
+		pid = parentPid
+	}
+	return ""
+}
+
+// DetectShell identifies the user's shell and determines the corresponding config file.
+// If an explicit shell name is provided, it configures that specific shell.
+func DetectShell(requested ...string) (shellName string, rcPath string, err error) {
+	if len(requested) > 0 && strings.TrimSpace(requested[0]) != "" {
+		shellName = strings.ToLower(strings.TrimSpace(requested[0]))
+	} else {
+		shellName = detectRunningShell()
+		if shellName == "" {
+			rawShell := os.Getenv("SHELL")
+			if rawShell == "" {
+				rawShell = "/bin/bash"
+			}
+			base := strings.ToLower(filepath.Base(rawShell))
+			switch {
+			case strings.Contains(base, "zsh"):
+				shellName = "zsh"
+			case strings.Contains(base, "fish"):
+				shellName = "fish"
+			default:
+				shellName = "bash"
+			}
+		}
 	}
 
-	base := strings.ToLower(filepath.Base(rawShell))
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", "", fmt.Errorf("unable to determine user home directory: %w", err)
 	}
 
-	switch {
-	case strings.Contains(base, "zsh"):
-		shellName = "zsh"
+	switch shellName {
+	case "zsh":
 		rcPath = filepath.Join(home, ".zshrc")
-	case strings.Contains(base, "fish"):
-		shellName = "fish"
+	case "fish":
 		rcPath = filepath.Join(home, ".config", "fish", "config.fish")
-	default:
-		shellName = "bash"
-		// On macOS, bash uses ~/.bash_profile by default for login shells if present
+	case "bash":
 		if runtime.GOOS == "darwin" {
 			profilePath := filepath.Join(home, ".bash_profile")
 			if _, statErr := os.Stat(profilePath); statErr == nil {
@@ -46,6 +112,8 @@ func DetectShell() (shellName string, rcPath string, err error) {
 			}
 		}
 		rcPath = filepath.Join(home, ".bashrc")
+	default:
+		return "", "", fmt.Errorf("unsupported shell '%s'. Supported shells: bash, zsh, fish", shellName)
 	}
 
 	return shellName, rcPath, nil
@@ -59,9 +127,9 @@ func GenerateRcSnippet(shellName string) string {
 	return fmt.Sprintf("%s\neval \"$(explain hook %s)\"\n%s\n", MarkerStart, shellName, MarkerEnd)
 }
 
-// Enable activates explain guard in the detected shell configuration file.
-func Enable() error {
-	shellName, rcPath, err := DetectShell()
+// Enable activates explain guard in the target shell configuration file.
+func Enable(requested ...string) error {
+	shellName, rcPath, err := DetectShell(requested...)
 	if err != nil {
 		return err
 	}
@@ -109,8 +177,8 @@ func Enable() error {
 }
 
 // Disable deactivates explain guard by removing the snippet from the shell config.
-func Disable() error {
-	shellName, rcPath, err := DetectShell()
+func Disable(requested ...string) error {
+	shellName, rcPath, err := DetectShell(requested...)
 	if err != nil {
 		return err
 	}
@@ -164,8 +232,8 @@ func Disable() error {
 }
 
 // Status reports the current state of explain guard on the system.
-func Status() error {
-	shellName, rcPath, err := DetectShell()
+func Status(requested ...string) error {
+	shellName, rcPath, err := DetectShell(requested...)
 	if err != nil {
 		return err
 	}

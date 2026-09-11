@@ -146,8 +146,12 @@ func main() {
 	}
 
 	if args[0] == "guard" {
+		var reqShell string
+		if len(args) > 2 {
+			reqShell = args[2]
+		}
 		if len(args) == 1 || args[1] == "status" {
-			if err := guard.Status(); err != nil {
+			if err := guard.Status(reqShell); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(1)
 			}
@@ -155,13 +159,13 @@ func main() {
 		}
 		switch args[1] {
 		case "enable", "on", "start":
-			if err := guard.Enable(); err != nil {
+			if err := guard.Enable(reqShell); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(1)
 			}
 			return
 		case "disable", "off", "stop":
-			if err := guard.Disable(); err != nil {
+			if err := guard.Disable(reqShell); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(1)
 			}
@@ -171,7 +175,7 @@ func main() {
 			code := guard.Check(cmdToCheck)
 			os.Exit(code)
 		default:
-			fmt.Fprintf(os.Stderr, "Unknown guard command: %s. Use 'enable', 'disable', or 'status'.\n", args[1])
+			fmt.Fprintf(os.Stderr, "Unknown guard command: %s. Use 'enable [shell]', 'disable [shell]', or 'status [shell]'.\n", args[1])
 			os.Exit(1)
 		}
 	}
