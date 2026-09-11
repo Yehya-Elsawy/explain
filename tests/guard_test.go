@@ -31,25 +31,38 @@ func TestGenerateHook(t *testing.T) {
 }
 
 func TestDetectShell(t *testing.T) {
-	origShell := os.Getenv("SHELL")
-	defer os.Setenv("SHELL", origShell)
-
-	os.Setenv("SHELL", "/bin/zsh")
-	sh, rc, err := guard.DetectShell()
+	// 1. Explicit shell requests
+	sh, rc, err := guard.DetectShell("zsh")
 	if err != nil || sh != "zsh" || !strings.HasSuffix(rc, ".zshrc") {
 		t.Errorf("expected zsh and .zshrc, got %s, %s, err: %v", sh, rc, err)
 	}
 
-	os.Setenv("SHELL", "/usr/bin/fish")
-	sh, rc, err = guard.DetectShell()
+	sh, rc, err = guard.DetectShell("fish")
 	if err != nil || sh != "fish" || !strings.HasSuffix(rc, "config.fish") {
 		t.Errorf("expected fish and config.fish, got %s, %s, err: %v", sh, rc, err)
 	}
 
-	os.Setenv("SHELL", "/bin/bash")
-	sh, _, err = guard.DetectShell()
-	if err != nil || sh != "bash" {
-		t.Errorf("expected bash, got %s, err: %v", sh, err)
+	sh, rc, err = guard.DetectShell("bash")
+	if err != nil || sh != "bash" || !strings.HasSuffix(rc, ".bashrc") {
+		t.Errorf("expected bash and .bashrc, got %s, %s, err: %v", sh, rc, err)
+	}
+
+	// 2. Unsupported shell request
+	_, _, err = guard.DetectShell("unknown_shell")
+	if err == nil {
+		t.Error("expected error for unsupported shell")
+	}
+
+	// 3. Auto-detection without arguments should succeed and return a supported shell
+	sh, rc, err = guard.DetectShell()
+	if err != nil {
+		t.Fatalf("unexpected error during shell auto-detection: %v", err)
+	}
+	if sh != "bash" && sh != "zsh" && sh != "fish" {
+		t.Errorf("expected detected shell to be bash, zsh, or fish, got %s", sh)
+	}
+	if rc == "" {
+		t.Errorf("expected non-empty rc path for detected shell %s", sh)
 	}
 }
 
