@@ -12,13 +12,78 @@ import (
 	"github.com/Yehya-Elsawy/explain/pkg/ui"
 )
 
-// Check inspects a raw command string. If the command poses a critical risk,
-// it halts, displays a risk warning, and prompts the user for confirmation.
-// Returns 0 if allowed/safe/confirmed, or 1 if cancelled/aborted.
+// isLethalSuicideCommand detects commands that have zero legitimate use cases
+// and permanently/irreversibly destroy the operating system or user home.
+func isLethalSuicideCommand(rawCmd string, pipeline *ast.Pipeline) bool {
+	// 1. Fork bombs
+	if strings.Contains(rawCmd, ":(){ :|:& };:") || strings.Contains(rawCmd, ":(){:|:&};:") {
+		return true
+	}
+
+	for _, cmd := range pipeline.Commands {
+		argsJoined := strings.Join(cmd.Args, " ")
+
+		// 2. Recursive rm on system roots, home, or with --no-preserve-root
+		if cmd.Name == "rm" {
+			hasRec := false
+			for _, arg := range cmd.Args {
+				if arg == "-r" || arg == "-R" || arg == "--recursive" || (strings.HasPrefix(arg, "-") && (strings.Contains(arg, "r") || strings.Contains(arg, "R"))) {
+					hasRec = true
+					break
+				}
+			}
+
+			if hasRec {
+				for _, arg := range cmd.Args {
+					if arg == "/" || arg == "/*" || arg == "~" || arg == "~/*" || arg == "$HOME" || arg == "$HOME/*" {
+						return true
+					}
+				}
+				if strings.Contains(argsJoined, "--no-preserve-root") {
+					return true
+				}
+			}
+		}
+
+		// 3. Recursive chmod 777 on / or /*
+		if cmd.Name == "chmod" {
+			hasRec := strings.Contains(argsJoined, "-R") || strings.Contains(argsJoined, "--recursive")
+			has777 := strings.Contains(argsJoined, "777") || strings.Contains(argsJoined, "a+rwx")
+			if hasRec && has777 {
+				for _, arg := range cmd.Args {
+					if arg == "/" || arg == "/*" || arg == "~" || arg == "$HOME" {
+						return true
+					}
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+// Check inspects a raw command string. If the command poses a critical risk:
+// - Suicidal commands (rm -rf /, fork bombs, chmod 777 /) are HARD BLOCKED unconditionally.
+// - Other destructive operations (dd, mkfs, etc.) require explicitly typing 'CONFIRM'.
+// Returns 0 if allowed/confirmed, or 1 if blocked/aborted.
 func Check(rawCmd string) int {
 	rawCmd = strings.TrimSpace(rawCmd)
 	if rawCmd == "" {
 		return 0
+	}
+
+	// 1. Immediate detection of fork bombs
+	if strings.Contains(rawCmd, ":(){ :|:& };:") || strings.Contains(rawCmd, ":(){:|:&};:") {
+		ui.InitColors(false)
+		fmt.Println()
+		fmt.Printf("  %s %s\n\n", ui.Colorize(ui.BoldRed, "[X]"), ui.Colorize(ui.BoldRed, "explain guard: execution permanently blocked"))
+		fmt.Printf("      %s %s\n", ui.Colorize(ui.Dim, "Command :"), ui.Colorize(ui.BoldWhite, rawCmd))
+		fmt.Printf("      %s %s\n", ui.Colorize(ui.Dim, "Target  :"), ui.Colorize(ui.Cyan, "fork bomb"))
+		fmt.Printf("      %s %s\n", ui.Colorize(ui.Dim, "Risk    :"), ui.Colorize(ui.BoldRed, "[ SYSTEM FREEZE HAZARD ]"))
+		fmt.Printf("      %s %s\n", ui.Colorize(ui.Dim, "Action  :"), ui.Colorize(ui.BoldYellow, "This command exhausts process slots and crashes the operating system."))
+		fmt.Println()
+		fmt.Printf("  %s %s\n\n", ui.Colorize(ui.BoldRed, "[!]"), ui.Colorize(ui.White, "explain guard will not execute this command under any circumstances."))
+		return 1
 	}
 
 	pipeline, err := ast.Parse(rawCmd)
@@ -55,6 +120,20 @@ func Check(rawCmd string) int {
 
 	ui.InitColors(false)
 
+	// CASE 1: LETHAL SUICIDE COMMANDS -> HARD BLOCK (NO CONFIRMATION POSSIBLE)
+	if isLethalSuicideCommand(rawCmd, pipeline) {
+		fmt.Println()
+		fmt.Printf("  %s %s\n\n", ui.Colorize(ui.BoldRed, "[X]"), ui.Colorize(ui.BoldRed, "explain guard: execution permanently blocked"))
+		fmt.Printf("      %s %s\n", ui.Colorize(ui.Dim, "Command :"), ui.Colorize(ui.BoldWhite, rawCmd))
+		fmt.Printf("      %s %s\n", ui.Colorize(ui.Dim, "Target  :"), ui.Colorize(ui.Cyan, critCmdName))
+		fmt.Printf("      %s %s\n", ui.Colorize(ui.Dim, "Risk    :"), ui.Colorize(ui.BoldRed, "[ LETHAL SYSTEM DESTRUCTION ]"))
+		fmt.Printf("      %s %s\n", ui.Colorize(ui.Dim, "Action  :"), ui.Colorize(ui.BoldYellow, "This command destroys the operating system with zero legitimate use cases."))
+		fmt.Println()
+		fmt.Printf("  %s %s\n\n", ui.Colorize(ui.BoldRed, "[!]"), ui.Colorize(ui.White, "explain guard will not execute this command under any circumstances."))
+		return 1
+	}
+
+	// CASE 2: HIGH-RISK OPERATIONS (dd, mkfs, format) -> REQUIRE TYPING 'CONFIRM'
 	fmt.Println()
 	fmt.Printf("  %s %s\n\n", ui.Colorize(ui.BoldRed, "[!]"), ui.Colorize(ui.BoldRed, "explain guard: critical risk operation detected"))
 	fmt.Printf("      %s %s\n", ui.Colorize(ui.Dim, "Command :"), ui.Colorize(ui.BoldWhite, rawCmd))
@@ -69,7 +148,7 @@ func Check(rawCmd string) int {
 	}
 
 	fmt.Println()
-	fmt.Printf("  %s %s", ui.Colorize(ui.BoldYellow, "[?]"), ui.Colorize(ui.BoldWhite, "Execute this dangerous command anyway? (y/N): "))
+	fmt.Printf("  %s %s", ui.Colorize(ui.BoldYellow, "[?]"), ui.Colorize(ui.BoldWhite, "To proceed, type 'CONFIRM' (or press Enter to cancel): "))
 
 	// Read user response from /dev/tty to ensure direct interactive prompt
 	var reader *bufio.Reader
@@ -87,9 +166,9 @@ func Check(rawCmd string) int {
 		return 1
 	}
 
-	resp = strings.ToLower(strings.TrimSpace(resp))
-	if resp == "y" || resp == "yes" {
-		fmt.Printf("  %s %s\n\n", ui.Colorize(ui.Dim, "[>]"), ui.Colorize(ui.Dim, "Proceeding with execution..."))
+	resp = strings.TrimSpace(resp)
+	if resp == "CONFIRM" {
+		fmt.Printf("\n  %s %s\n\n", ui.Colorize(ui.BoldGreen, "[✓]"), ui.Colorize(ui.BoldGreen, "Confirmation accepted. Proceeding with execution..."))
 		return 0
 	}
 

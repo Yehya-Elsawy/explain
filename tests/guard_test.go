@@ -151,3 +151,21 @@ func TestGuardDangerClassification(t *testing.T) {
 		}
 	}
 }
+
+func TestGuardHardBlock(t *testing.T) {
+	lethal := []string{
+		"rm -rf /",
+		"rm -rf /*",
+		"rm -rf ~",
+		"rm -rf --no-preserve-root /",
+		":(){ :|:& };:",
+		"chmod -R 777 /",
+	}
+
+	for _, cmd := range lethal {
+		exitCode := guard.Check(cmd)
+		if exitCode != 1 {
+			t.Errorf("expected lethal command %q to be hard-blocked with exit code 1, got %d", cmd, exitCode)
+		}
+	}
+}
