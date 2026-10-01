@@ -22,7 +22,6 @@ const (
 func detectRunningShell() string {
 	pid := os.Getppid()
 	for i := 0; i < 6 && pid > 1; i++ {
-		// Linux: read /proc/<pid>/comm
 		commBytes, err := os.ReadFile(fmt.Sprintf("/proc/%d/comm", pid))
 		if err == nil {
 			comm := strings.ToLower(strings.TrimSpace(string(commBytes)))
@@ -36,7 +35,6 @@ func detectRunningShell() string {
 			}
 		}
 
-		// macOS fallback
 		if runtime.GOOS == "darwin" {
 			out, err := exec.Command("ps", "-p", fmt.Sprintf("%d", pid), "-o", "comm=").Output()
 			if err == nil {
@@ -52,7 +50,6 @@ func detectRunningShell() string {
 			}
 		}
 
-		// Read parent PID from /proc/<pid>/stat
 		statBytes, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
 		if err != nil {
 			break
@@ -135,14 +132,12 @@ func Enable(requested ...string) error {
 		return err
 	}
 
-	// Read existing rc file
 	contentBytes, err := os.ReadFile(rcPath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed to read %s: %w", rcPath, err)
 	}
 	content := string(contentBytes)
 
-	// Check if already present
 	if strings.Contains(content, MarkerStart) {
 		fmt.Println()
 		fmt.Printf("  %s %s\n", ui.Colorize(ui.BoldYellow, "[>]"), ui.Colorize(ui.BoldWhite, "explain guard is already enabled"))
@@ -150,12 +145,10 @@ func Enable(requested ...string) error {
 		return nil
 	}
 
-	// Ensure parent directory exists (e.g. ~/.config/fish)
 	if err := os.MkdirAll(filepath.Dir(rcPath), 0755); err != nil {
 		return fmt.Errorf("failed to create directory for %s: %w", rcPath, err)
 	}
 
-	// Append snippet cleanly
 	snippet := GenerateRcSnippet(shellName)
 	newContent := content
 	if len(newContent) > 0 && !strings.HasSuffix(newContent, "\n") {
@@ -174,7 +167,6 @@ func Enable(requested ...string) error {
 	fmt.Printf("  %s %s\n", ui.Colorize(ui.BoldYellow, "[>]"), ui.Colorize(ui.White, "To activate protection in your current terminal session, run:"))
 	fmt.Printf("      %s\n\n", ui.Colorize(ui.BoldCyan, "source "+rcPath))
 
-	// Ensure shell completions are installed
 	_, _ = completion.InstallAll()
 
 	return nil
@@ -208,7 +200,6 @@ func Disable(requested ...string) error {
 		return nil
 	}
 
-	// Slice out the block
 	before := strings.TrimRight(content[:startIdx], "\r\n")
 	after := strings.TrimLeft(content[endIdx+len(MarkerEnd):], "\r\n")
 

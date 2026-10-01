@@ -20,32 +20,26 @@ func SynthesizePipelineSummary(pipe *PipelineAnalysis) string {
 	}
 	joinedNames := strings.Join(names, " → ")
 
-	// Pattern 1: ps ... | grep ... | awk ... | xargs kill
 	if hasCmd(names, "ps") && (hasCmd(names, "kill") || hasCmd(names, "pkill")) {
 		return "Searches for active process IDs matching a target process pattern and forcefully terminates them."
 	}
 
-	// Pattern 2: ps ... | grep ... | awk/cut
 	if hasCmd(names, "ps") && hasCmd(names, "grep") {
 		return "Lists running system processes, filters matching lines, and extracts specific process details."
 	}
 
-	// Pattern 3: Remote script download & execute (curl/wget | bash/sh)
 	if (hasCmd(names, "curl") || hasCmd(names, "wget")) && (hasCmd(names, "bash") || hasCmd(names, "sh") || hasCmd(names, "python") || hasCmd(names, "python3")) {
 		return "Downloads a remote script from the web and pipes it directly to a shell interpreter for immediate execution."
 	}
 
-	// Pattern 4: find ... | xargs rm / chmod / etc.
 	if hasCmd(names, "find") && hasCmd(names, "xargs") {
 		return "Finds files matching specified criteria and runs batch commands on every matched item."
 	}
 
-	// Pattern 5: cat/find | grep | wc/sort/uniq
 	if (hasCmd(names, "cat") || hasCmd(names, "grep")) && (hasCmd(names, "wc") || hasCmd(names, "sort") || hasCmd(names, "uniq")) {
 		return "Inspects and filters input data, then aggregates, counts, or sorts the results."
 	}
 
-	// General Pipeline Fallback
 	return fmt.Sprintf("A %d-stage pipeline (%s) that feeds the output of each command directly into the next.", numCmds, joinedNames)
 }
 
@@ -55,7 +49,6 @@ func SuggestAlternative(pipe *PipelineAnalysis) string {
 		return ""
 	}
 
-	// 1. Danger alerts take top priority for tips
 	for _, cmd := range pipe.Commands {
 		if cmd.CommandName == "rm" && strings.Contains(cmd.RawCommand, "-rf") && (strings.Contains(cmd.RawCommand, "/") || strings.Contains(cmd.RawCommand, "/*")) {
 			return "Critical Danger: Running 'rm -rf /' will permanently erase your entire operating system!"
@@ -65,7 +58,6 @@ func SuggestAlternative(pipe *PipelineAnalysis) string {
 		}
 	}
 
-	// 2. Useless Use of Cat (cat file | grep pattern)
 	if len(pipe.Commands) >= 2 && pipe.Commands[0].CommandName == "cat" && len(pipe.Commands[0].PositionalArgs) > 0 {
 		file := pipe.Commands[0].PositionalArgs[0]
 		second := pipe.Commands[1].CommandName
@@ -84,7 +76,6 @@ func SuggestAlternative(pipe *PipelineAnalysis) string {
 		}
 	}
 
-	// 3. Process killing pipeline (ps aux | grep name | awk ... | xargs kill)
 	names := make([]string, len(pipe.Commands))
 	for i, c := range pipe.Commands {
 		names[i] = c.CommandName
@@ -100,7 +91,6 @@ func SuggestAlternative(pipe *PipelineAnalysis) string {
 		return fmt.Sprintf("Tip: Instead of this multi-stage pipeline, simplify with a single command: pkill -9 %s", target)
 	}
 
-	// 4. find ... | xargs rm
 	if hasCmd(names, "find") && (hasCmd(names, "xargs") || hasCmd(names, "rm")) {
 		for _, c := range pipe.Commands {
 			if c.CommandName == "rm" || (c.CommandName == "xargs" && strings.Contains(c.RawCommand, "rm")) {
@@ -109,7 +99,6 @@ func SuggestAlternative(pipe *PipelineAnalysis) string {
 		}
 	}
 
-	// 5. Remote script execution warning
 	if (hasCmd(names, "curl") || hasCmd(names, "wget")) && (hasCmd(names, "bash") || hasCmd(names, "sh")) {
 		return "Security Note: Executing unverified remote scripts directly can be dangerous. Consider downloading first to inspect: curl -O <url>"
 	}

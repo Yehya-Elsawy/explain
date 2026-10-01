@@ -20,7 +20,6 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 	name := cmd.Name
 	argsJoined := strings.Join(cmd.Args, " ")
 
-	// 1. Root / Critical RM checks
 	if name == "rm" {
 		hasRecursive := false
 		hasForce := false
@@ -76,7 +75,6 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 		}
 	}
 
-	// 2. Low-level device writes / Disk formatting (dd, mkfs, fdisk)
 	if name == "dd" {
 		if strings.Contains(argsJoined, "of=/dev/") {
 			return DangerInfo{
@@ -103,7 +101,6 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 		}
 	}
 
-	// 3. Permissive Chmod (chmod 777)
 	if name == "chmod" {
 		isRecursive := strings.Contains(argsJoined, "-R") || strings.Contains(argsJoined, "--recursive")
 		is777 := strings.Contains(argsJoined, "777") || strings.Contains(argsJoined, "a+rwx")
@@ -133,7 +130,6 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 		}
 	}
 
-	// 4. Force Git operations
 	if name == "git" {
 		if strings.Contains(argsJoined, "--force") || strings.Contains(argsJoined, "-f") {
 			return DangerInfo{
@@ -153,7 +149,6 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 		}
 	}
 
-	// 5. Mass Process Killing
 	if name == "kill" || name == "killall" || name == "pkill" {
 		if strings.Contains(argsJoined, "-9") || strings.Contains(argsJoined, "KILL") {
 			return DangerInfo{
@@ -165,7 +160,6 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 		}
 	}
 
-	// 6. Output Redirects to Raw Devices or Files
 	for _, r := range cmd.Redirects {
 		if strings.HasPrefix(r.Target, "/dev/sd") || strings.HasPrefix(r.Target, "/dev/nvme") {
 			return DangerInfo{
@@ -185,7 +179,6 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 		}
 	}
 
-	// 7. Rsync --delete
 	if name == "rsync" && strings.Contains(argsJoined, "--delete") {
 		return DangerInfo{
 			Level:   database.RiskHigh,
@@ -195,7 +188,6 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 		}
 	}
 
-	// 8. Find -delete / -exec rm
 	if name == "find" && (strings.Contains(argsJoined, "-delete") || strings.Contains(argsJoined, "-exec rm")) {
 		return DangerInfo{
 			Level:   database.RiskHigh,
@@ -205,12 +197,10 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 		}
 	}
 
-	// 9. Specific handling for common benign commands (tar, ls, cd, pwd, cat)
 	if name == "tar" && !strings.Contains(argsJoined, " /") {
 		return DangerInfo{Level: database.RiskLow, Badge: "LOW RISK", Reason: "Bundles or extracts files locally."}
 	}
 
-	// 10. Default Command Risk from Database
 	if def, ok := database.BuiltinCommands[name]; ok {
 		switch def.DefaultRisk {
 		case database.RiskSafe:

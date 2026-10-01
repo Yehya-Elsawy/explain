@@ -125,7 +125,6 @@ func main() {
 	completion.AutoEnsure()
 	args := os.Args[1:]
 
-	// Check if data is piped via stdin (e.g. echo "ps aux | grep nginx" | explain)
 	stat, _ := os.Stdin.Stat()
 	isPiped := (stat.Mode() & os.ModeCharDevice) == 0
 
@@ -321,7 +320,6 @@ func main() {
 
 	rawInput := strings.Join(cmdTokens, " ")
 
-	// Handle !! (explain last history command)
 	trimmed := strings.TrimSpace(rawInput)
 	if trimmed == "!!" || trimmed == "\"!!\"" || trimmed == "'!!'" {
 		lastCmd := ast.GetLastHistoryCommand()
@@ -411,7 +409,6 @@ func runUninstall() {
 		if _, err := os.Stat(path); err == nil {
 			err := os.Remove(path)
 			if err != nil {
-				// Try removing with sudo if permission denied
 				execCmd := exec.Command("sudo", "rm", "-f", path)
 				if err2 := execCmd.Run(); err2 == nil {
 					fmt.Printf("  %s Removed %s\n", ui.Colorize(ui.BoldGreen, "✓"), path)

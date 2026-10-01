@@ -80,7 +80,6 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 		PositionalArgs: []string{},
 	}
 
-	// 1. Add Prefixes (sudo, xargs, etc.)
 	for _, p := range cmd.Prefixes {
 		desc := "Runs the command with administrative (root) privileges"
 		if p == "xargs" {
@@ -101,12 +100,10 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 		})
 	}
 
-	// 2. Fetch or lookup Command Definition
 	cmdDef, hasDef := database.BuiltinCommands[cmd.Name]
 	if hasDef {
 		analysis.CommandSummary = cmdDef.Summary
 	} else {
-		// Fallback to dynamic man page extraction
 		summary := manparser.ExtractCommandSummary(cmd.Name)
 		if summary != "" {
 			analysis.CommandSummary = summary
@@ -115,7 +112,6 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 		}
 	}
 
-	// 3. Detect Subcommand (e.g. git commit, docker run, systemctl restart)
 	args := cmd.Args
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		firstArg := args[0]
@@ -134,17 +130,14 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 		}
 	}
 
-	// 4. Process Flags and Positional Arguments
 	i := 0
 	for i < len(args) {
 		arg := args[i]
 
-		// Special case: `tar xzf` or `tar czvf` (tar flags without leading dash)
 		if cmd.Name == "tar" && i == 0 && !strings.HasPrefix(arg, "-") && isTarFlagCluster(arg) {
 			arg = "-" + arg
 		}
 
-		// Special case: `ps aux` or `ps ax` (BSD-style flags without leading dash)
 		if cmd.Name == "ps" && (arg == "aux" || arg == "ax" || arg == "lax") {
 			analysis.Items = append(analysis.Items, ExplainedItem{
 				Token:       arg,
@@ -157,7 +150,6 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 			continue
 		}
 
-		// Long option: --flag or --flag=value
 		if strings.HasPrefix(arg, "--") {
 			flagKey := strings.TrimPrefix(arg, "--")
 			flagVal := ""
@@ -200,7 +192,6 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 			continue
 		}
 
-		// Numeric signal flags (e.g. kill -9 or kill -15)
 		if (cmd.Name == "kill" || cmd.Name == "pkill" || cmd.Name == "killall") && strings.HasPrefix(arg, "-") && isNumber(arg[1:]) {
 			sigNum := arg[1:]
 			sigDef, _ := findFlagDef(cmdDef, "", sigNum)
@@ -219,11 +210,9 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 			continue
 		}
 
-		// Short option(s): -x or -xzf or dd key=val style
 		if strings.HasPrefix(arg, "-") && len(arg) > 1 && (!isNumber(arg[1:]) || cmd.Name == "find") {
 			cluster := arg[1:]
 
-			// Single named options with single dash (e.g. find -name, -type, -mtime, -maxdepth)
 			if cmd.Name == "find" && len(cluster) > 1 {
 				flagDef, found := findFlagDef(cmdDef, "", cluster)
 				if !found {
@@ -248,7 +237,6 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 				continue
 			}
 
-			// Clustered short flags (-xzvf)
 			runes := []rune(cluster)
 			for rIdx, r := range runes {
 				charStr := string(r)
@@ -276,7 +264,7 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 						consumedClusterRemainder = true
 					} else if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
 						val = args[i+1]
-						i++ // consume the following value
+						i++
 					}
 					if val != "" {
 						desc += " (" + val + ")"
@@ -298,7 +286,6 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 			continue
 		}
 
-		// dd style args (if=file, of=file, bs=4M)
 		if cmd.Name == "dd" && strings.Contains(arg, "=") {
 			parts := strings.SplitN(arg, "=", 2)
 			prefix := parts[0]

@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
 BOLD='\033[1m'
 DIM='\033[2m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 echo -e "${CYAN}"
 echo "  ┌─────────────────────────────────────────────────────────────┐"
@@ -16,14 +15,12 @@ echo "  │    EXPLAIN CLI — Understand the command before you run it.  │"
 echo "  └─────────────────────────────────────────────────────────────┘"
 echo -e "${NC}"
 
-# Target destination
 INSTALL_DIR="/usr/local/bin"
 if [ "$EUID" -ne 0 ]; then
     INSTALL_DIR="$HOME/.local/bin"
     mkdir -p "$INSTALL_DIR"
 fi
 
-# Detect OS and Architecture
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
 
@@ -39,7 +36,6 @@ LATEST_URL="https://github.com/$REPO/releases/latest/download/explain_${OS}_${AR
 
 echo -e "${YELLOW}[>] Downloading explain binary for ${OS}/${ARCH}...${NC}"
 
-# Smooth progress bar animation
 show_progress() {
     local width=30
     for ((i=1; i<=width; i++)); do
@@ -75,7 +71,6 @@ fi
 
 rm -rf "$TMP_DIR"
 
-# If release download didn't succeed, check if Go is installed to build from source
 if [ "$download_success" = false ]; then
     echo -e "${YELLOW}[i] Pre-built release binary not found, compiling from source...${NC}"
     if command -v go >/dev/null 2>&1; then
@@ -98,12 +93,10 @@ fi
 
 echo -e "${GREEN}✓ Successfully installed explain to $INSTALL_DIR/explain${NC}"
 
-# Automatically install shell autocompletions
 if [ -x "$INSTALL_DIR/explain" ]; then
     "$INSTALL_DIR/explain" completion install >/dev/null 2>&1 || true
 fi
 
-# Ensure PATH includes install directory
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
     echo -e "${YELLOW}Note: $INSTALL_DIR is not in your current PATH.${NC}"
     echo "Add it to your shell config (~/.bashrc or ~/.zshrc):"

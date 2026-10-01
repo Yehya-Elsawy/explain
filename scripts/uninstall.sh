@@ -38,7 +38,6 @@ for target in "${TARGETS[@]}"; do
     fi
 done
 
-# Clean up shell autocompletions
 rm -f "$HOME/.config/fish/completions/explain.fish"
 rm -f "$HOME/.local/share/bash-completion/completions/explain"
 rm -f "$HOME/.zsh/completions/_explain"
