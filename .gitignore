@@ -1,6 +1,7 @@
 # Binaries
 bin/
 /explain
+/explain-test
 *.exe
 *.exe~
 *.dll
@@ -28,7 +29,3 @@ coverage.html
 vendor/
 go.work
 go.work.sum
-
-# Build binaries
-/explain
-/explain-test

@@ -148,17 +148,20 @@ EXAMPLES:
   explain "curl -fsSL https://get.docker.com | sh"
 
 COMMANDS & OPTIONS:
-  explain guard enable  Enable active terminal protection against destructive commands
-  explain guard disable Disable active terminal protection
-  explain guard status  Check current terminal protection status
-  explain update    Check and upgrade explain to the latest release from GitHub
-  explain uninstall Remove explain CLI from your system
-  -i, --interactive Launch interactive mode (paste complex pipelines without quotes)
-  -r, --run         Ask to run the command after explaining it
-  --json            Output structured analysis in JSON format
-  --no-color        Disable colored output
-  -v, --version     Show current explain version
-  -h, --help        Show this help message
+  explain guard enable       Enable active terminal protection against destructive commands
+  explain guard disable      Disable active terminal protection
+  explain guard status       Check current terminal protection status
+  explain hook [shell]       Output shell hook script (bash, zsh, fish)
+  explain completion [shell] Output shell autocompletion script (bash, zsh, fish)
+  explain completion install Install shell autocompletions into user config
+  explain update             Check and upgrade explain to the latest release from GitHub
+  explain uninstall          Remove explain CLI from your system
+  -i, --interactive          Launch interactive mode (paste complex pipelines without quotes)
+  -r, --run                  Ask to run the command after explaining it
+  --json                     Output structured analysis in JSON format
+  --no-color                 Disable colored output
+  -v, --version              Show current explain version
+  -h, --help                 Show this help message
 ```
 
 ---

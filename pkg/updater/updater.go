@@ -79,10 +79,7 @@ func SelfUpdate(currentVersion string) error {
 		return fmt.Errorf("failed to check for updates: %w", err)
 	}
 
-	cleanCurrent := strings.TrimPrefix(currentVersion, "v")
-	cleanLatest := strings.TrimPrefix(latestTag, "v")
-
-	if (cleanCurrent == cleanLatest && cleanCurrent != "") || cleanCurrent >= cleanLatest {
+	if IsUpToDate(currentVersion, latestTag) {
 		fmt.Printf("  %s %s %s\n\n", ui.Colorize(ui.BoldGreen, "✓"), ui.Colorize(ui.BoldGreen, "explain is already up to date"), ui.Colorize(ui.Dim, "("+currentVersion+")"))
 		return nil
 	}
@@ -175,4 +172,33 @@ func showProgressBar() {
 		time.Sleep(12 * time.Millisecond)
 	}
 	fmt.Printf("\r    %s[██████████████████████████████]%s 100%%\n", ui.Green, ui.Reset)
+}
+
+// IsUpToDate parses and compares two semantic version strings.
+// Returns true if current >= latest, false otherwise.
+func IsUpToDate(current, latest string) bool {
+	c := strings.TrimPrefix(strings.TrimSpace(current), "v")
+	l := strings.TrimPrefix(strings.TrimSpace(latest), "v")
+
+	if c == l || c == "" || c == "(devel)" {
+		return true
+	}
+
+	cParts := strings.Split(strings.Split(c, "-")[0], ".")
+	lParts := strings.Split(strings.Split(l, "-")[0], ".")
+
+	for i := 0; i < len(cParts) && i < len(lParts); i++ {
+		var cNum, lNum int
+		fmt.Sscanf(cParts[i], "%d", &cNum)
+		fmt.Sscanf(lParts[i], "%d", &lNum)
+
+		if cNum > lNum {
+			return true
+		}
+		if cNum < lNum {
+			return false
+		}
+	}
+
+	return len(cParts) >= len(lParts)
 }

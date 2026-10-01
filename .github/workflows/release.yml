@@ -40,6 +40,6 @@ jobs:
           files: dist/*.tar.gz
           name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
