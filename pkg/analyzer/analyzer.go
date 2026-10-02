@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"path/filepath"
 	"strings"
 
 	"github.com/Yehya-Elsawy/explain/pkg/ast"
@@ -8,7 +9,6 @@ import (
 	"github.com/Yehya-Elsawy/explain/pkg/manparser"
 )
 
-// ExplainedItem represents a single token/flag/argument breakdown item.
 type ExplainedItem struct {
 	Token       string
 	Label       string
@@ -20,7 +20,6 @@ type ExplainedItem struct {
 	Risk        database.RiskLevel
 }
 
-// CommandAnalysis contains the complete breakdown and explanation of a command.
 type CommandAnalysis struct {
 	RawCommand     string
 	Prefixes       []string
@@ -36,7 +35,6 @@ type CommandAnalysis struct {
 	ChainOp        string
 }
 
-// PipelineAnalysis contains the analysis of all piped or chained commands.
 type PipelineAnalysis struct {
 	RawInput        string
 	Commands        []*CommandAnalysis
@@ -45,7 +43,6 @@ type PipelineAnalysis struct {
 	SmartTip        string
 }
 
-// AnalyzePipeline analyzes a full parsed AST pipeline.
 func AnalyzePipeline(pipe *ast.Pipeline) *PipelineAnalysis {
 	result := &PipelineAnalysis{
 		RawInput: pipe.RawInput,
@@ -68,8 +65,8 @@ func AnalyzePipeline(pipe *ast.Pipeline) *PipelineAnalysis {
 	return result
 }
 
-// AnalyzeSingleCommand analyzes a single command node.
 func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
+	baseName := filepath.Base(cmd.Name)
 	analysis := &CommandAnalysis{
 		Prefixes:       cmd.Prefixes,
 		CommandName:    cmd.Name,
@@ -100,11 +97,17 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 		})
 	}
 
-	cmdDef, hasDef := database.BuiltinCommands[cmd.Name]
+	cmdDef, hasDef := database.BuiltinCommands[baseName]
+	if !hasDef && baseName != cmd.Name {
+		cmdDef, hasDef = database.BuiltinCommands[cmd.Name]
+	}
 	if hasDef {
 		analysis.CommandSummary = cmdDef.Summary
 	} else {
-		summary := manparser.ExtractCommandSummary(cmd.Name)
+		summary := manparser.ExtractCommandSummary(baseName)
+		if summary == "" && baseName != cmd.Name {
+			summary = manparser.ExtractCommandSummary(cmd.Name)
+		}
 		if summary != "" {
 			analysis.CommandSummary = summary
 		} else {
@@ -130,15 +133,16 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 		}
 	}
 
+	hasKillSignal := false
 	i := 0
 	for i < len(args) {
 		arg := args[i]
 
-		if cmd.Name == "tar" && i == 0 && !strings.HasPrefix(arg, "-") && isTarFlagCluster(arg) {
+		if baseName == "tar" && i == 0 && !strings.HasPrefix(arg, "-") && isTarFlagCluster(arg) {
 			arg = "-" + arg
 		}
 
-		if cmd.Name == "ps" && (arg == "aux" || arg == "ax" || arg == "lax") {
+		if baseName == "ps" && (arg == "aux" || arg == "ax" || arg == "lax") {
 			analysis.Items = append(analysis.Items, ExplainedItem{
 				Token:       arg,
 				Label:       arg,
@@ -161,7 +165,7 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 
 			flagDef, found := findFlagDef(cmdDef, analysis.Subcommand, flagKey)
 			if !found {
-				flagDef = lookupDynamicFlagDef(cmd.Name, "--"+flagKey)
+				flagDef = lookupDynamicFlagDef(baseName, "--"+flagKey)
 			}
 			if flagVal == "" && flagDef.TakesValue && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
 				flagVal = args[i+1]
@@ -192,31 +196,34 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 			continue
 		}
 
-		if (cmd.Name == "kill" || cmd.Name == "pkill" || cmd.Name == "killall") && strings.HasPrefix(arg, "-") && isNumber(arg[1:]) {
-			sigNum := arg[1:]
-			sigDef, _ := findFlagDef(cmdDef, "", sigNum)
-			desc := sigDef.Description
-			if desc == "" {
-				desc = "Send signal " + sigNum + " to process"
+		if (baseName == "kill" || baseName == "pkill" || baseName == "killall") && strings.HasPrefix(arg, "-") && isNumber(arg[1:]) {
+			if !hasKillSignal {
+				hasKillSignal = true
+				sigNum := arg[1:]
+				sigDef, _ := findFlagDef(cmdDef, "", sigNum)
+				desc := sigDef.Description
+				if desc == "" {
+					desc = "Send signal " + sigNum + " to process"
+				}
+				analysis.Items = append(analysis.Items, ExplainedItem{
+					Token:       arg,
+					Label:       arg,
+					Description: desc,
+					IsFlag:      true,
+					Risk:        sigDef.Risk,
+				})
+				i++
+				continue
 			}
-			analysis.Items = append(analysis.Items, ExplainedItem{
-				Token:       arg,
-				Label:       arg,
-				Description: desc,
-				IsFlag:      true,
-				Risk:        sigDef.Risk,
-			})
-			i++
-			continue
 		}
 
-		if strings.HasPrefix(arg, "-") && len(arg) > 1 && (!isNumber(arg[1:]) || cmd.Name == "find") {
+		if strings.HasPrefix(arg, "-") && len(arg) > 1 && (!isNumber(arg[1:]) || baseName == "find") {
 			cluster := arg[1:]
 
-			if cmd.Name == "find" && len(cluster) > 1 {
+			if baseName == "find" && len(cluster) > 1 {
 				flagDef, found := findFlagDef(cmdDef, "", cluster)
 				if !found {
-					flagDef = lookupDynamicFlagDef(cmd.Name, arg)
+					flagDef = lookupDynamicFlagDef(baseName, arg)
 				}
 				desc := flagDef.Description
 				if desc == "" {
@@ -242,7 +249,7 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 				charStr := string(r)
 				flagDef, found := findFlagDef(cmdDef, analysis.Subcommand, charStr)
 				if !found {
-					flagDef = lookupDynamicFlagDef(cmd.Name, "-"+charStr)
+					flagDef = lookupDynamicFlagDef(baseName, "-"+charStr)
 				}
 				label := "-" + charStr
 				if flagDef.Long != "" {
@@ -286,7 +293,7 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 			continue
 		}
 
-		if cmd.Name == "dd" && strings.Contains(arg, "=") {
+		if baseName == "dd" && strings.Contains(arg, "=") {
 			parts := strings.SplitN(arg, "=", 2)
 			prefix := parts[0]
 			val := parts[1]
@@ -307,21 +314,17 @@ func AnalyzeSingleCommand(cmd *ast.SingleCommand) *CommandAnalysis {
 			continue
 		}
 
-		// Positional argument
 		analysis.PositionalArgs = append(analysis.PositionalArgs, arg)
 		analysis.Items = append(analysis.Items, ExplainedItem{
 			Token:       arg,
 			Label:       arg,
-			Description: describePositionalArg(cmd.Name, analysis.Subcommand, arg, len(analysis.PositionalArgs)),
+			Description: describePositionalArg(baseName, analysis.Subcommand, arg, len(analysis.PositionalArgs)),
 			IsArg:       true,
 		})
 		i++
 	}
 
-	// 5. Evaluate Danger
 	analysis.Danger = EvaluateDanger(cmd, analysis)
-
-	// 6. Synthesize Action Summary
 	analysis.ActionSummary = SynthesizeAction(cmd, analysis)
 
 	return analysis
@@ -436,6 +439,11 @@ func describePositionalArg(cmdName, subcmd, arg string, pos int) string {
 		if subcmd == "checkout" || subcmd == "branch" {
 			return "Branch name"
 		}
+	case "kill", "pkill", "killall":
+		if arg == "-1" {
+			return "PID -1 (all processes owned by user; terminates entire user session)"
+		}
+		return "Target Process ID (PID) to signal"
 	}
 	return "Positional argument"
 }

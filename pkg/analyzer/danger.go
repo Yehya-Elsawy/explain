@@ -1,13 +1,13 @@
 package analyzer
 
 import (
+	"path/filepath"
 	"strings"
 
 	"github.com/Yehya-Elsawy/explain/pkg/ast"
 	"github.com/Yehya-Elsawy/explain/pkg/database"
 )
 
-// DangerInfo contains the safety rating and warning messages for a command.
 type DangerInfo struct {
 	Level   database.RiskLevel
 	Badge   string
@@ -15,9 +15,8 @@ type DangerInfo struct {
 	Warning string
 }
 
-// EvaluateDanger inspects command structure, arguments, and flags for hazards.
 func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInfo {
-	name := cmd.Name
+	name := filepath.Base(cmd.Name)
 	argsJoined := strings.Join(cmd.Args, " ")
 
 	if name == "rm" {
@@ -92,12 +91,12 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 		}
 	}
 
-	if strings.HasPrefix(name, "mkfs") || name == "fdisk" || name == "parted" || name == "gdisk" {
+	if strings.HasPrefix(name, "mkfs") || name == "fdisk" || name == "parted" || name == "gdisk" || name == "sfdisk" || name == "sgdisk" || name == "wipefs" || name == "shred" {
 		return DangerInfo{
 			Level:   database.RiskCritical,
 			Badge:   "CRITICAL DISK OPERATION",
-			Reason:  "Modifies disk partition tables or formats filesystems.",
-			Warning: "Formatting a partition permanently erases all existing data on it.",
+			Reason:  "Modifies disk partition tables, wipes filesystem signatures, or shreds raw data.",
+			Warning: "This operation permanently erases partition tables and filesystem data.",
 		}
 	}
 
@@ -151,6 +150,14 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 
 	if name == "kill" || name == "killall" || name == "pkill" {
 		if strings.Contains(argsJoined, "-9") || strings.Contains(argsJoined, "KILL") {
+			if strings.Contains(argsJoined, " -1") || strings.HasSuffix(argsJoined, " -1") {
+				return DangerInfo{
+					Level:   database.RiskCritical,
+					Badge:   "SESSION TERMINATION",
+					Reason:  "Sending SIGKILL to PID -1 terminates every running process owned by the user.",
+					Warning: "This will immediately crash your shell session and all background jobs.",
+				}
+			}
 			return DangerInfo{
 				Level:   database.RiskHigh,
 				Badge:   "FORCE TERMINATION",
@@ -219,7 +226,6 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 	return DangerInfo{Level: database.RiskSafe, Badge: "SAFE TO RUN", Reason: "Standard command execution."}
 }
 
-// CheckPipelineDangers checks for dangerous combinations like `curl ... | bash`
 func CheckPipelineDangers(pipe *PipelineAnalysis) {
 	if len(pipe.Commands) < 2 {
 		return
@@ -229,7 +235,10 @@ func CheckPipelineDangers(pipe *PipelineAnalysis) {
 		first := pipe.Commands[i]
 		second := pipe.Commands[i+1]
 
-		if (first.CommandName == "curl" || first.CommandName == "wget") && (second.CommandName == "bash" || second.CommandName == "sh" || second.CommandName == "zsh" || second.CommandName == "sudo" || second.CommandName == "python3" || second.CommandName == "python") {
+		firstName := filepath.Base(first.CommandName)
+		secondName := filepath.Base(second.CommandName)
+
+		if (firstName == "curl" || firstName == "wget") && (secondName == "bash" || secondName == "sh" || secondName == "zsh" || secondName == "sudo" || secondName == "python3" || secondName == "python") {
 			pipe.MaxRisk = database.RiskCritical
 			second.Danger = DangerInfo{
 				Level:   database.RiskCritical,

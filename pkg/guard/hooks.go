@@ -37,7 +37,7 @@ _explain_guard_bash() {
     [[ "$cmd" == explain* || "$cmd" == _explain* ]] && return 0
 
     # Fast shell regex filter: only test commands matching hazardous patterns
-    if [[ "$cmd" =~ (rm[[:space:]]|dd[[:space:]]|mkfs|chmod[[:space:]]|chown[[:space:]]|>[[:space:]]*/dev/|\|\s*(sudo\s*)?(ba)?sh) ]]; then
+    if [[ "$cmd" =~ (rm[[:space:]]|dd[[:space:]]|mkfs|chmod[[:space:]]|chown[[:space:]]|fdisk|parted|wipefs|shred|gdisk|sfdisk|>[[:space:]]*/dev/|\|[[:space:]]*(sudo[[:space:]]*)?(ba|z)?sh) ]]; then
         explain guard check "$cmd"
         return $?
     fi
@@ -56,7 +56,8 @@ _explain_guard_zsh() {
     local trimmed="${cmd#"${cmd%%[![:space:]]*}"}"
 
     if [[ -n "$trimmed" && "$trimmed" != explain* && "$trimmed" != _explain* ]]; then
-        if [[ "$trimmed" =~ (rm[[:space:]]|dd[[:space:]]|mkfs|chmod[[:space:]]|chown[[:space:]]|>[[:space:]]*/dev/|\|\s*(sudo\s*)?(ba)?sh) ]]; then
+        local pattern='(rm[[:space:]]|dd[[:space:]]|mkfs|chmod[[:space:]]|chown[[:space:]]|fdisk|parted|wipefs|shred|gdisk|sfdisk|>[[:space:]]*/dev/|\|[[:space:]]*(sudo[[:space:]]*)?(ba|z)?sh)'
+        if [[ "$trimmed" =~ $pattern ]]; then
             explain guard check "$trimmed"
             if [[ $? -ne 0 ]]; then
                 zle -M "  [!] Command cancelled by explain guard"
@@ -78,7 +79,7 @@ function _explain_guard_fish
     set -l trimmed (string trim -- "$cmd")
 
     if test -n "$trimmed"; and not string match -rq '^(_?explain)' -- "$trimmed"
-        if string match -rq '(rm\s|dd\s|mkfs|chmod\s|chown\s|>\s*/dev/|\|\s*(sudo\s*)?(ba)?sh)' -- "$trimmed"
+        if string match -rq '(rm\s|dd\s|mkfs|chmod\s|chown\s|fdisk|parted|wipefs|shred|gdisk|sfdisk|>\s*/dev/|\|\s*(sudo\s*)?(ba|z)?sh)' -- "$trimmed"
             explain guard check "$trimmed"
             if test $status -ne 0
                 echo "  [!] Command cancelled by explain guard"

@@ -2,12 +2,12 @@ package analyzer
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/Yehya-Elsawy/explain/pkg/ast"
 )
 
-// SynthesizePipelineSummary creates a cohesive 1-2 sentence human explanation for multi-stage pipelines.
 func SynthesizePipelineSummary(pipe *PipelineAnalysis) string {
 	numCmds := len(pipe.Commands)
 	if numCmds <= 1 {
@@ -43,7 +43,6 @@ func SynthesizePipelineSummary(pipe *PipelineAnalysis) string {
 	return fmt.Sprintf("A %d-stage pipeline (%s) that feeds the output of each command directly into the next.", numCmds, joinedNames)
 }
 
-// SuggestAlternative checks for command anti-patterns and suggests cleaner/safer single-command alternatives.
 func SuggestAlternative(pipe *PipelineAnalysis) string {
 	if len(pipe.Commands) == 0 {
 		return ""
@@ -106,9 +105,8 @@ func SuggestAlternative(pipe *PipelineAnalysis) string {
 	return ""
 }
 
-// SynthesizeAction generates a concise plain-English sentence summarizing the exact command action.
 func SynthesizeAction(cmd *ast.SingleCommand, analysis *CommandAnalysis) string {
-	name := cmd.Name
+	name := filepath.Base(cmd.Name)
 	argsJoined := strings.Join(cmd.Args, " ")
 
 	switch name {
@@ -487,7 +485,7 @@ func SynthesizeAction(cmd *ast.SingleCommand, analysis *CommandAnalysis) string 
 
 func hasCmd(list []string, target string) bool {
 	for _, s := range list {
-		if s == target {
+		if s == target || filepath.Base(s) == target {
 			return true
 		}
 	}

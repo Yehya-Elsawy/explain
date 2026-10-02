@@ -144,13 +144,24 @@ func TestGuardDangerClassification(t *testing.T) {
 		}
 	}
 
-	// Catastrophic commands that MUST be intercepted as RiskCritical
 	criticalCommands := []string{
 		"rm -rf /",
+		"/bin/rm -rf /",
+		"sudo /bin/rm -rf /",
 		"rm -rf /*",
+		"rm -rf /.",
+		"rm -rf /etc",
+		"rm -rf /boot",
 		"dd if=/dev/zero of=/dev/sda",
+		"/bin/dd if=/dev/zero of=/dev/sda",
 		"mkfs.ext4 /dev/sdb1",
+		"fdisk /dev/sda",
+		"/sbin/fdisk /dev/sda",
+		"parted /dev/sda",
+		"wipefs -a /dev/sda",
+		"shred -u disk.img",
 		"chmod -R 777 /",
+		"kill -9 -1",
 	}
 
 	for _, cmdStr := range criticalCommands {
@@ -168,11 +179,25 @@ func TestGuardDangerClassification(t *testing.T) {
 func TestGuardHardBlock(t *testing.T) {
 	lethal := []string{
 		"rm -rf /",
+		"/bin/rm -rf /",
+		"/usr/bin/rm -rf /",
+		"sudo /bin/rm -rf /",
 		"rm -rf /*",
+		"rm -rf /.",
+		"rm -rf /etc",
+		"rm -rf /etc/*",
+		"rm -rf /boot",
+		"rm -rf /usr",
 		"rm -rf ~",
+		"rm -rf $HOME",
 		"rm -rf --no-preserve-root /",
 		":(){ :|:& };:",
 		"chmod -R 777 /",
+		"chmod -R 777 /.",
+		"/bin/chmod -R 777 /",
+		`bash -c "rm -rf /"`,
+		`sh -c "/bin/rm -rf /."`,
+		`eval "rm -rf /etc"`,
 	}
 
 	for _, cmd := range lethal {
