@@ -8,18 +8,15 @@ import (
 	"github.com/Yehya-Elsawy/explain/pkg/database"
 )
 
-// RenderPipeline renders the complete formatted explanation to stdout.
 func RenderPipeline(analysis *analyzer.PipelineAnalysis) {
 	fmt.Println()
 
 	numCmds := len(analysis.Commands)
 
-	// 1. Overall Pipeline Header (if multi-stage)
 	if numCmds > 1 {
 		renderPipelineOverview(analysis)
 	}
 
-	// 2. Render each command stage
 	for idx, cmd := range analysis.Commands {
 		if numCmds > 1 {
 			stageNum := fmt.Sprintf("Stage %d of %d", idx+1, numCmds)
@@ -31,13 +28,18 @@ func RenderPipeline(analysis *analyzer.PipelineAnalysis) {
 		if idx < numCmds-1 {
 			if cmd.PipedToNext {
 				fmt.Printf("       %s %s\n\n", Colorize(BoldYellow, "│"), Colorize(Dim, "pipes stdout into next command ──►"))
+			} else if cmd.ChainOp == "&&" {
+				fmt.Printf("       %s %s\n\n", Colorize(BoldYellow, "│"), Colorize(Dim, "runs next command only if this succeeds (exit code 0) ──►"))
+			} else if cmd.ChainOp == "||" {
+				fmt.Printf("       %s %s\n\n", Colorize(BoldYellow, "│"), Colorize(Dim, "runs next command only if this fails (non-zero exit) ──►"))
+			} else if cmd.ChainOp == ";" {
+				fmt.Printf("       %s %s\n\n", Colorize(BoldYellow, "│"), Colorize(Dim, "runs next command sequentially after completion ──►"))
 			} else if cmd.ChainOp != "" {
 				fmt.Printf("       %s %s\n\n", Colorize(BoldYellow, "│"), Colorize(Dim, "then executes ("+cmd.ChainOp+") ──►"))
 			}
 		}
 	}
 
-	// 3. Render Smart Tip / Better Alternative (if available)
 	if analysis.SmartTip != "" {
 		renderSmartTip(analysis.SmartTip)
 	}
@@ -45,14 +47,75 @@ func RenderPipeline(analysis *analyzer.PipelineAnalysis) {
 	fmt.Println()
 }
 
-func renderPipelineOverview(analysis *analyzer.PipelineAnalysis) {
-	var stages []string
-	for _, c := range analysis.Commands {
-		stages = append(stages, Colorize(BoldWhite, c.CommandName))
-	}
-	pipelineFlow := strings.Join(stages, Colorize(BoldYellow, " ──► "))
+func getExecutionTitle(analysis *analyzer.PipelineAnalysis) string {
+	hasPipe := false
+	hasAnd := false
+	hasOr := false
+	hasSemi := false
 
-	fmt.Printf("  %s %s\n", Colorize(BoldMagenta, "Pipeline Overview:"), pipelineFlow)
+	for i := 0; i < len(analysis.Commands)-1; i++ {
+		cmd := analysis.Commands[i]
+		if cmd.PipedToNext {
+			hasPipe = true
+		} else if cmd.ChainOp == "&&" {
+			hasAnd = true
+		} else if cmd.ChainOp == "||" {
+			hasOr = true
+		} else if cmd.ChainOp == ";" {
+			hasSemi = true
+		}
+	}
+
+	distinct := 0
+	if hasPipe {
+		distinct++
+	}
+	if hasAnd {
+		distinct++
+	}
+	if hasOr {
+		distinct++
+	}
+	if hasSemi {
+		distinct++
+	}
+
+	if distinct > 1 {
+		return "Compound Command Overview:"
+	}
+	if hasAnd {
+		return "Chained Execution (AND):"
+	}
+	if hasOr {
+		return "Fallback Execution (OR):"
+	}
+	if hasSemi {
+		return "Sequential Execution:"
+	}
+	return "Pipeline Overview:"
+}
+
+func renderPipelineOverview(analysis *analyzer.PipelineAnalysis) {
+	var sb strings.Builder
+	for i, c := range analysis.Commands {
+		sb.WriteString(Colorize(BoldWhite, c.CommandName))
+		if i < len(analysis.Commands)-1 {
+			opStr := " ──► "
+			if c.PipedToNext {
+				opStr = " ──[|]──► "
+			} else if c.ChainOp == "&&" {
+				opStr = " ──[&&]──► "
+			} else if c.ChainOp == "||" {
+				opStr = " ──[||]──► "
+			} else if c.ChainOp == ";" {
+				opStr = " ──[;]──► "
+			}
+			sb.WriteString(Colorize(BoldYellow, opStr))
+		}
+	}
+
+	title := getExecutionTitle(analysis)
+	fmt.Printf("  %s %s\n", Colorize(BoldMagenta, title), sb.String())
 	if analysis.PipelineSummary != "" {
 		fmt.Printf("  %s %s\n", Colorize(Dim, "└─►"), Colorize(White, analysis.PipelineSummary))
 	}
@@ -65,7 +128,6 @@ func renderSingleCommand(cmd *analyzer.CommandAnalysis, isPipeline bool) {
 		indent = "  │ "
 	}
 
-	// 1. Command Header (Command Name + Summary)
 	cmdTitle := cmd.CommandName
 	if cmd.Subcommand != "" {
 		cmdTitle = cmd.CommandName + " " + cmd.Subcommand
@@ -78,13 +140,11 @@ func renderSingleCommand(cmd *analyzer.CommandAnalysis, isPipeline bool) {
 		Colorize(White, cmd.CommandSummary),
 	)
 
-	// 2. What this command does (Human Summary)
 	if cmd.ActionSummary != "" {
 		fmt.Printf("%s%s\n", indent, Colorize(BoldGreen, "What this command does"))
 		fmt.Printf("%s  %s %s\n\n", indent, Colorize(BoldGreen, "└─►"), Colorize(White, cmd.ActionSummary))
 	}
 
-	// 3. Breakdown Section (Flags & Arguments Table)
 	if len(cmd.Items) > 0 {
 		fmt.Printf("%s%s\n", indent, Colorize(BoldWhite, "Breakdown"))
 
@@ -126,7 +186,6 @@ func renderSingleCommand(cmd *analyzer.CommandAnalysis, isPipeline bool) {
 		fmt.Println()
 	}
 
-	// 4. Redirections Section (if present)
 	if len(cmd.Redirects) > 0 {
 		fmt.Printf("%s%s\n", indent, Colorize(BoldYellow, "I/O Redirection"))
 		for _, r := range cmd.Redirects {
@@ -147,7 +206,6 @@ func renderSingleCommand(cmd *analyzer.CommandAnalysis, isPipeline bool) {
 		fmt.Println()
 	}
 
-	// 5. Safety & Danger Assessment (ONLY rendered if command is genuinely risky)
 	renderDangerAssessment(cmd.Danger, indent)
 
 	if isPipeline {
@@ -156,7 +214,6 @@ func renderSingleCommand(cmd *analyzer.CommandAnalysis, isPipeline bool) {
 }
 
 func renderDangerAssessment(danger analyzer.DangerInfo, indent string) {
-	// ONLY render risk box if the command is genuinely risky (Medium, High, Critical, or has warning)
 	if danger.Level != database.RiskMedium && danger.Level != database.RiskHigh && danger.Level != database.RiskCritical && danger.Warning == "" {
 		return
 	}

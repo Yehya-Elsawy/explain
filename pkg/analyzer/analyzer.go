@@ -444,6 +444,21 @@ func describePositionalArg(cmdName, subcmd, arg string, pos int) string {
 			return "PID -1 (all processes owned by user; terminates entire user session)"
 		}
 		return "Target Process ID (PID) to signal"
+	case "make":
+		switch arg {
+		case "build":
+			return "Makefile target goal to compile/build the project"
+		case "test":
+			return "Makefile target goal to run project tests"
+		case "clean":
+			return "Makefile target goal to remove compiled files and artifacts"
+		case "install":
+			return "Makefile target goal to install binaries and resources"
+		case "all":
+			return "Makefile target goal to build the default/all targets"
+		default:
+			return "Makefile target goal / rule to execute"
+		}
 	}
 	return "Positional argument"
 }

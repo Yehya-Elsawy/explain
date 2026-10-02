@@ -195,12 +195,22 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 		}
 	}
 
-	if name == "find" && (strings.Contains(argsJoined, "-delete") || strings.Contains(argsJoined, "-exec rm")) {
-		return DangerInfo{
-			Level:   database.RiskHigh,
-			Badge:   "AUTOMATIC DELETION",
-			Reason:  "Automatically deletes every file matching search conditions.",
-			Warning: "Run find without '-delete' first to review matched files.",
+	if name == "find" {
+		if strings.Contains(argsJoined, "-delete") {
+			return DangerInfo{
+				Level:   database.RiskHigh,
+				Badge:   "AUTOMATIC DELETION",
+				Reason:  "Automatically deletes every file matching search conditions.",
+				Warning: "Run find without '-delete' first to review matched files.",
+			}
+		}
+		if strings.Contains(argsJoined, "-exec rm") {
+			return DangerInfo{
+				Level:   database.RiskHigh,
+				Badge:   "AUTOMATIC DELETION",
+				Reason:  "Executes 'rm' to delete every file matching search conditions.",
+				Warning: "Run find with '-exec ls' or without '-exec rm' first to review matched files.",
+			}
 		}
 	}
 
@@ -209,7 +219,13 @@ func EvaluateDanger(cmd *ast.SingleCommand, analysis *CommandAnalysis) DangerInf
 	}
 
 	if def, ok := database.BuiltinCommands[name]; ok {
-		switch def.DefaultRisk {
+		risk := def.DefaultRisk
+		if analysis.Subcommand != "" && def.Subcommands != nil {
+			if subDef, subOk := def.Subcommands[analysis.Subcommand]; subOk {
+				risk = subDef.DefaultRisk
+			}
+		}
+		switch risk {
 		case database.RiskSafe:
 			return DangerInfo{Level: database.RiskSafe, Badge: "SAFE TO RUN", Reason: "Read-only operation; safe to run."}
 		case database.RiskLow:

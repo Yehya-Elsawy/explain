@@ -290,4 +290,21 @@ var BuiltinCommands = map[string]CommandDef{
 			"status": {Long: "status=", TakesValue: true, ValueName: "LEVEL", Description: "Level of information to print (e.g. status=progress shows real-time transfer speed)"},
 		},
 	},
+
+	"make": {
+		Name:        "make",
+		Category:    "Build",
+		Summary:     "GNU Make build automation tool to maintain groups of programs",
+		Description: "Controls the generation of executables and other non-source files of a program from the program's source files.",
+		DefaultRisk: RiskLow,
+		Flags: map[string]FlagDef{
+			"f": {Short: "-f", Long: "--file", TakesValue: true, ValueName: "FILE", Description: "Read FILE as a makefile"},
+			"C": {Short: "-C", Long: "--directory", TakesValue: true, ValueName: "DIR", Description: "Change to directory DIR before reading the makefiles"},
+			"j": {Short: "-j", Long: "--jobs", TakesValue: true, ValueName: "N", Description: "Specifies the number of jobs (commands) to run simultaneously"},
+			"B": {Short: "-B", Long: "--always-make", Description: "Unconditionally make all targets"},
+			"k": {Short: "-k", Long: "--keep-going", Description: "Continue as much as possible after an error"},
+			"n": {Short: "-n", Long: "--just-print", Description: "Print the commands that would be executed, but do not execute them (dry run)"},
+			"s": {Short: "-s", Long: "--silent", Description: "Do not echo recipes before executing them"},
+		},
+	},
 }

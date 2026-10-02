@@ -46,3 +46,19 @@ func TestDangerChmod777(t *testing.T) {
 		t.Errorf("expected High risk for chmod 777, got %v", cmd.Danger.Level)
 	}
 }
+
+func TestDangerFindDeleteVsExecRm(t *testing.T) {
+	pipe1, _ := ast.Parse("find . -name '*.log' -delete")
+	analysis1 := analyzer.AnalyzePipeline(pipe1)
+	warn1 := analysis1.Commands[0].Danger.Warning
+	if warn1 != "Run find without '-delete' first to review matched files." {
+		t.Errorf("unexpected warning for find -delete: %q", warn1)
+	}
+
+	pipe2, _ := ast.Parse("find . -name '*.log' -exec rm -f {} \\;")
+	analysis2 := analyzer.AnalyzePipeline(pipe2)
+	warn2 := analysis2.Commands[0].Danger.Warning
+	if warn2 != "Run find with '-exec ls' or without '-exec rm' first to review matched files." {
+		t.Errorf("unexpected warning for find -exec rm: %q", warn2)
+	}
+}

@@ -232,7 +232,7 @@ func init() {
 				"upgrade": {
 					Name:        "upgrade",
 					Summary:     "Upgrade all installed packages to newest versions",
-					DefaultRisk: RiskMedium,
+					DefaultRisk: RiskLow,
 					Flags: map[string]FlagDef{
 						"y": {Short: "-y", Long: "--yes", Description: "Automatic yes to prompts; assume yes to all questions"},
 					},

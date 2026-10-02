@@ -18,6 +18,58 @@ func SynthesizePipelineSummary(pipe *PipelineAnalysis) string {
 	for i, c := range pipe.Commands {
 		names[i] = c.CommandName
 	}
+
+	hasPipe := false
+	hasAnd := false
+	hasOr := false
+	hasSemi := false
+
+	for i := 0; i < len(pipe.Commands)-1; i++ {
+		cmd := pipe.Commands[i]
+		if cmd.PipedToNext {
+			hasPipe = true
+		} else if cmd.ChainOp == "&&" {
+			hasAnd = true
+		} else if cmd.ChainOp == "||" {
+			hasOr = true
+		} else if cmd.ChainOp == ";" {
+			hasSemi = true
+		}
+	}
+
+	distinct := 0
+	if hasPipe {
+		distinct++
+	}
+	if hasAnd {
+		distinct++
+	}
+	if hasOr {
+		distinct++
+	}
+	if hasSemi {
+		distinct++
+	}
+
+	if distinct > 1 {
+		return fmt.Sprintf("A compound %d-stage execution combining pipelines and conditional operators.", numCmds)
+	}
+
+	if hasAnd {
+		joined := strings.Join(names, " && ")
+		return fmt.Sprintf("A conditional %d-stage execution chain (%s) where each command runs only if the preceding command succeeds (exit code 0).", numCmds, joined)
+	}
+
+	if hasOr {
+		joined := strings.Join(names, " || ")
+		return fmt.Sprintf("A fallback %d-stage execution chain (%s) where each command runs only if the preceding command fails (non-zero exit code).", numCmds, joined)
+	}
+
+	if hasSemi {
+		joined := strings.Join(names, " ; ")
+		return fmt.Sprintf("A sequential %d-stage execution (%s) where commands run one after another, regardless of exit status.", numCmds, joined)
+	}
+
 	joinedNames := strings.Join(names, " → ")
 
 	if hasCmd(names, "ps") && (hasCmd(names, "kill") || hasCmd(names, "pkill")) {
@@ -474,6 +526,12 @@ func SynthesizeAction(cmd *ast.SingleCommand, analysis *CommandAnalysis) string 
 		if analysis.Subcommand != "" {
 			return fmt.Sprintf("Runs Node package manager action: npm %s.", analysis.Subcommand)
 		}
+
+	case "make":
+		if len(analysis.PositionalArgs) > 0 {
+			return fmt.Sprintf("Builds target '%s' using instructions in the Makefile.", strings.Join(analysis.PositionalArgs, ", "))
+		}
+		return "Executes default target defined in the project Makefile."
 	}
 
 	if analysis.CommandSummary != "" {
@@ -552,6 +610,9 @@ func lowerFirstChar(s string) string {
 		return s
 	}
 	runes := []rune(s)
+	if len(runes) > 1 && runes[1] >= 'A' && runes[1] <= 'Z' {
+		return s
+	}
 	if runes[0] >= 'A' && runes[0] <= 'Z' {
 		runes[0] = runes[0] + ('a' - 'A')
 	}
